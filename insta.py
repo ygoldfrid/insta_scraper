@@ -1,13 +1,16 @@
+import requests
+from bs4 import BeautifulSoup
+import argparse
+import time
+import re
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-import argparse
-import time
+# from selenium.webdriver.common.keys import Keys
 
 
-def scrape_insta(username, password, keyword):
+def scrape_insta(username, password, key_type, keyword, limit=50):
     # Setting the driver and opening Instagram
     driver = webdriver.Chrome()
     driver.get("https://www.instagram.com/")
@@ -41,7 +44,7 @@ def scrape_insta(username, password, keyword):
     search_box = WebDriverWait(driver, 10)\
         .until(expected_conditions.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']")))
     search_box.clear()
-    keyword = "#" + keyword
+    keyword = "#" + keyword if key_type == "hashtag" else keyword
     search_box.send_keys(keyword)
 
     # Finding the hashtag button by XPATH and clicking on it
@@ -49,18 +52,67 @@ def scrape_insta(username, password, keyword):
         .until(expected_conditions.element_to_be_clickable((By.XPATH, f"//span[contains(text(), '{keyword}')]")))
     hashtag_btn.click()
 
-    # Waiting for page to load
-    time.sleep(5)
+    # Do the real scraping
+    print_content(driver, limit)
 
-    # Scrolling down the page to load more images
-    driver.execute_script("window.scrollTo(0, 4000);")
 
-    # Finding all images in the page by the tag name img
-    images = driver.find_elements_by_tag_name("img")
+def print_content(driver, limit):
+    # Dictionary to store all posts uniquely
+    posts = {}
+    post_counter = 1
+    while post_counter <= limit:
+        # Waiting for page to load
+        time.sleep(3)
+        # Finding all hyperlinks in the page by the tag name 'a'
+        hyperlinks = driver.find_elements_by_tag_name("a")
+        for hyperlink in hyperlinks:
+            link = hyperlink.get_attribute("href")
+            # We only care about the /p/ links which means posts
+            if "/p/" in link:
+                # We slice the link to get a unique identifier
+                post_id = link[28:-1]
+                if post_id not in posts:
+                    print("####################################################")
+                    # Now we are ready to go to each link and get the data from it
+                    response = requests.get(link)
+                    soup = BeautifulSoup(response.content, "html.parser")
 
-    for image in images:
-        print(image.get_attribute("alt"))
-        print(image.get_attribute("src"))
+                    # We look for the tag meta with the description name. If it doesn't exist we skip the post
+                    description = soup.find("meta", {"name": "description"})
+                    if not description:
+                        print("No description - Skipping")
+                        continue
+
+                    # We get the content from the html and we do a regex search to get the desired data
+                    content = description["content"]
+                    match = re.search(r"([\dkm.,]+)\sLikes,\s([\dkm.,]+)\sComments\s-\s[^@]*(@[\w.-]+)", content)
+
+                    # If there is no regex match it means there is not enough info in the post, so we skip it
+                    if not match:
+                        print("No match - Skipping")
+                        continue
+
+                    # We save the post in the dictionary for reference
+                    posts[post_id] = post_counter
+                    # We print all the data
+                    print(f"POST {post_counter}")
+                    print(f"Link: {link}")
+                    print(f"Username: {match.group(3)}")
+                    print(f"{match.group(1)} likes")
+                    print(f"{match.group(2)} comments")
+
+                    # We get all the hashtags and print them
+                    hashtag_items = soup.find_all("meta", {"property": "instapp:hashtags"})
+                    hashtags = [hashtag_item["content"] for hashtag_item in hashtag_items]
+                    print(f"Hashtags: {hashtags}")
+
+                    post_counter += 1
+                    if post_counter > limit:
+                        print("Limit reached")
+                        break
+
+        # Scrolling to the end of page for loading more images
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
 
 def get_auth_by_file(filename):
@@ -79,14 +131,14 @@ def get_auth_by_console():
 
 
 def main():
-
-    """TODO: Develop so that -c or -f are at least one required but not both. Keyword must always be required"""
+    """TODO: Develop nice user interface"""
 
     parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
     parser.add_argument("-c", "--console", help="option for logging in through the console", action="store_true"),
     parser.add_argument("-f", "--filename", help="option for logging in through a file\n"
                                                  "username must be in the first line and password in the second one"),
-    parser.add_argument("keyword", help="the keyword (hashtag) to find in instagram"),
+    parser.add_argument("key_type", help="which type page to look for", choices=["user", "hashtag"]),
+    parser.add_argument("keyword", help="the keyword to find in instagram"),
     args = parser.parse_args()
 
     username, password = "", ""
@@ -98,7 +150,7 @@ def main():
         except FileNotFoundError:
             print("The provided file does not exist")
 
-    scrape_insta(username, password, args.keyword)
+    scrape_insta(username, password, key_type=args.key_type, keyword=args.keyword, limit=1000)
 
 
 if __name__ == "__main__":
