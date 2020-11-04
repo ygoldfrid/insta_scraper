@@ -118,8 +118,8 @@ def print_content(driver, limit):
 
 def get_auth_by_file(filename):
     with open(filename, "r") as file:
-        username = file.readline()
-        password = file.readline()
+        username = file.readline().strip()
+        password = file.readline().strip()
     return username, password
 
 def get_auth_by_console():
@@ -170,7 +170,7 @@ def console_credentials():
                     except FileNotFoundError:
                         print(f"Not found file at path: {file_path}")
                 pass
-            else: # file credentials
+            else: # console credentials
                 username, password = get_auth_by_console()
 
             keyword = input(f'Search: (any text as you would do on Instagram): ')
