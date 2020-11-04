@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import argparse
+import getpass
 import time
 import re
 from selenium import webdriver
@@ -131,26 +132,52 @@ def get_auth_by_console():
 
 
 def main():
-    """TODO: Develop nice user interface"""
+    print('Welcome to Insta Scrapper developed by Yaniv Goldfrid and Dana Velibekov.')
+    choice = ''
+    username = ''
+    password = ''
+    while True:
+        choice = input('What is your preferred method of authentication? [f]ile/[c]onsole/[q]uit: ')
+        if choice in ['f', 'c']:
+            break
+        else:
+            print("Invalid option")
 
-    parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
-    parser.add_argument("-c", "--console", help="option for logging in through the console", action="store_true"),
-    parser.add_argument("-f", "--filename", help="option for logging in through a file\n"
-                                                 "username must be in the first line and password in the second one"),
-    parser.add_argument("key_type", help="which type page to look for", choices=["user", "hashtag"]),
-    parser.add_argument("keyword", help="the keyword to find in instagram"),
-    args = parser.parse_args()
+    if choice == 'f':
+        while True:
+            file_path = input('Path to file containing auth details: ')
+            try:
+                username, password = get_auth_by_file(file_path)
+                print(file_path)
+                break
+            except FileNotFoundError:
+                print(f"Not found file at path: {file_path}")
+        pass
+    elif choice == 'c':
+        # TODO: deal with console
+        username = input('Username: ')
+        password = input('Password: ')
+        pass
 
-    username, password = "", ""
-    if args.console:
-        username, password = get_auth_by_console()
-    elif args.filename:
-        try:
-            username, password = get_auth_by_file(args.filename)
-        except FileNotFoundError:
-            print("The provided file does not exist")
+    # parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
+    # parser.add_argument("-c", "--console", help="option for logging in through the console", action="store_true"),
+    # parser.add_argument("-f", "--filename", help="option for logging in through a file\n"
+    #                                              "username must be in the first line and password in the second one"),
+    # parser.add_argument("key_type", help="which type page to look for", choices=["user", "hashtag"]),
+    # parser.add_argument("keyword", help="the keyword to find in instagram"),
+    # args = parser.parse_args()
+    #
+    # username, password = "", ""
+    # if args.console:
+    #     username, password = get_auth_by_console()
+    # elif args.filename:
+    #     try:
+    #         username, password = get_auth_by_file(args.filename)
+    #     except FileNotFoundError:
+    #         print("The provided file does not exist")
 
-    scrape_insta(username, password, key_type=args.key_type, keyword=args.keyword, limit=1000)
+    # main call to function
+    # scrape_insta(username="", password="", key_type=args.key_type, keyword=args.keyword, limit=1000)
 
 
 if __name__ == "__main__":
