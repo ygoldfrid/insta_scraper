@@ -12,7 +12,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 # from selenium.webdriver.common.keys import Keys
 
 
-def scrape_insta(username, password, key_type, keyword, limit=50):
+def scrape_insta(username, password, keyword, limit=50):
     # Setting the driver and opening Instagram
     driver = webdriver.Chrome()
     driver.get("https://www.instagram.com/")
@@ -46,7 +46,6 @@ def scrape_insta(username, password, key_type, keyword, limit=50):
     search_box = WebDriverWait(driver, 10)\
         .until(expected_conditions.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']")))
     search_box.clear()
-    keyword = "#" + keyword if key_type == "hashtag" else keyword
     search_box.send_keys(keyword)
 
     # Finding the hashtag button by XPATH and clicking on it
@@ -123,14 +122,37 @@ def get_auth_by_file(filename):
         password = file.readline()
     return username, password
 
+def get_auth_by_console():
+    username = input('Username: ')
+    password = getpass.getpass(prompt="Password: ", stream=None)
+    return username, password
 
-def main():
+def args_credentials():
+    parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
+    parser.add_argument("-c", "--console", help="option for logging in through the console", action="store_true"),
+    parser.add_argument("-f", "--filename", help="option for logging in through a file\n"
+                                                 "username must be in the first line and password in the second one"),
+    parser.add_argument("key_type", help="which type page to look for", choices=["user", "hashtag"]),
+    parser.add_argument("keyword", help="the keyword to find in instagram"),
+    args = parser.parse_args()
+
+    username, password = "", ""
+    if args.console:
+        username, password = get_auth_by_console()
+    elif args.filename:
+        try:
+            username, password = get_auth_by_file(args.filename)
+        except FileNotFoundError:
+            print("The provided file does not exist")
+    return username, password
+
+def console_credentials():
     print('Welcome to Insta Scrapper developed by Yaniv Goldfrid and Dana Velibekov.')
-    choice = ''
-    username = ''
-    password = ''
     while True:
         try:
+            choice = ''
+            username = ''
+            password = ''
             while True:
                 choice = input('What is your preferred method of authentication? [f]ile/[c]onsole: ')
                 if choice in ['f', 'c']:
@@ -138,7 +160,7 @@ def main():
                 else:
                     print("Invalid option")
 
-            if choice == 'f':
+            if choice == 'f': # file credentials
                 while True:
                     file_path = input('Path to file containing auth details: ')
                     try:
@@ -148,35 +170,25 @@ def main():
                     except FileNotFoundError:
                         print(f"Not found file at path: {file_path}")
                 pass
-            elif choice == 'c':
-                # TODO: deal with console
-                username = input('Username: ')
-                password = getpass.getpass(prompt="Password: ", stream=None)
-                print(username, password)
+            else: # file credentials
+                username, password = get_auth_by_console()
                 break
+
+            keyword = input(f'Search: (add "#" in-front to look for hashtags): ')
+            return username, password, keyword
+
         except KeyboardInterrupt:
             print("\nSee ya!")
             sys.exit(0)
 
-    # parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
-    # parser.add_argument("-c", "--console", help="option for logging in through the console", action="store_true"),
-    # parser.add_argument("-f", "--filename", help="option for logging in through a file\n"
-    #                                              "username must be in the first line and password in the second one"),
-    # parser.add_argument("key_type", help="which type page to look for", choices=["user", "hashtag"]),
-    # parser.add_argument("keyword", help="the keyword to find in instagram"),
-    # args = parser.parse_args()
-    #
-    # username, password = "", ""
-    # if args.console:
-    #     username, password = get_auth_by_console()
-    # elif args.filename:
-    #     try:
-    #         username, password = get_auth_by_file(args.filename)
-    #     except FileNotFoundError:
-    #         print("The provided file does not exist")
+def main():
 
     # main call to function
-    # scrape_insta(username="", password="", key_type=args.key_type, keyword=args.keyword, limit=1000)
+    username, password, keyword = console_credentials()
+    scrape_insta(username=username,
+                 password=password,
+                 keyword=keyword,
+                 limit=1000)
 
 
 if __name__ == "__main__":
