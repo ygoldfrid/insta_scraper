@@ -173,7 +173,7 @@ def console_credentials():
             else: # file credentials
                 username, password = get_auth_by_console()
 
-            keyword = input(f'Search: (add "#" in-front to look for hashtags): ')
+            keyword = input(f'Search: (any text as you would do on Instagram): ')
             return username, password, keyword
 
         except KeyboardInterrupt:
