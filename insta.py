@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import argparse
 import getpass
+import sys
 import time
 import re
 from selenium import webdriver
@@ -123,41 +124,39 @@ def get_auth_by_file(filename):
     return username, password
 
 
-def get_auth_by_console():
-
-    """TODO: Auth through command line"""
-
-    print("Logging in from console")
-    return "", ""
-
-
 def main():
     print('Welcome to Insta Scrapper developed by Yaniv Goldfrid and Dana Velibekov.')
     choice = ''
     username = ''
     password = ''
     while True:
-        choice = input('What is your preferred method of authentication? [f]ile/[c]onsole/[q]uit: ')
-        if choice in ['f', 'c']:
-            break
-        else:
-            print("Invalid option")
+        try:
+            while True:
+                choice = input('What is your preferred method of authentication? [f]ile/[c]onsole: ')
+                if choice in ['f', 'c']:
+                    break
+                else:
+                    print("Invalid option")
 
-    if choice == 'f':
-        while True:
-            file_path = input('Path to file containing auth details: ')
-            try:
-                username, password = get_auth_by_file(file_path)
-                print(file_path)
+            if choice == 'f':
+                while True:
+                    file_path = input('Path to file containing auth details: ')
+                    try:
+                        username, password = get_auth_by_file(file_path)
+                        print(file_path)
+                        break
+                    except FileNotFoundError:
+                        print(f"Not found file at path: {file_path}")
+                pass
+            elif choice == 'c':
+                # TODO: deal with console
+                username = input('Username: ')
+                password = getpass.getpass(prompt="Password: ", stream=None)
+                print(username, password)
                 break
-            except FileNotFoundError:
-                print(f"Not found file at path: {file_path}")
-        pass
-    elif choice == 'c':
-        # TODO: deal with console
-        username = input('Username: ')
-        password = input('Password: ')
-        pass
+        except KeyboardInterrupt:
+            print("\nSee ya!")
+            sys.exit(0)
 
     # parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
     # parser.add_argument("-c", "--console", help="option for logging in through the console", action="store_true"),
