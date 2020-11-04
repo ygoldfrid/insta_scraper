@@ -172,7 +172,6 @@ def console_credentials():
                 pass
             else: # file credentials
                 username, password = get_auth_by_console()
-                break
 
             keyword = input(f'Search: (add "#" in-front to look for hashtags): ')
             return username, password, keyword
