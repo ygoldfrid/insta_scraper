@@ -9,7 +9,6 @@ from selenium import webdriver
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-# from selenium.webdriver.common.keys import Keys
 
 
 def scrape_insta(username, password, keyword, limit=50):
@@ -42,11 +41,15 @@ def scrape_insta(username, password, keyword, limit=50):
         .until(expected_conditions.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Not Now')]")))
     not_now_btn2.click()
 
+    keyword = "#" + keyword if keyword[0] not in ["@", "#"] else keyword
+
     # Finding the search box by XPATH and typing in the keyword
     search_box = WebDriverWait(driver, 10)\
         .until(expected_conditions.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']")))
     search_box.clear()
     search_box.send_keys(keyword)
+
+    keyword = keyword[1:] if keyword[0] == "@" else keyword
 
     # Finding the hashtag button by XPATH and clicking on it
     hashtag_btn = WebDriverWait(driver, 10)\
@@ -122,10 +125,12 @@ def get_auth_by_file(filename):
         password = file.readline().strip()
     return username, password
 
+
 def get_auth_by_console():
     username = input('Username: ')
     password = getpass.getpass(prompt="Password: ", stream=None)
     return username, password
+
 
 def args_credentials():
     parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
@@ -146,39 +151,44 @@ def args_credentials():
             print("The provided file does not exist")
     return username, password
 
+
 def console_credentials():
-    print('Welcome to Insta Scrapper developed by Yaniv Goldfrid and Dana Velibekov.')
+    print('\nWelcome to Insta Scrapper developed by Yaniv Goldfrid and Dana Velibekov')
     while True:
         try:
-            choice = ''
-            username = ''
-            password = ''
             while True:
-                choice = input('What is your preferred method of authentication? [f]ile/[c]onsole: ')
-                if choice in ['f', 'c']:
+                choice = input('Please select preferred method of authentication:\n[f]ile (default)\n[c]onsole\n')
+                choice = "f" if choice == "" else choice
+                if choice.lower() in ['f', 'c']:
                     break
                 else:
                     print("Invalid option")
 
-            if choice == 'f': # file credentials
+            if choice.lower() == 'f':  # file credentials
                 while True:
-                    file_path = input('Path to file containing auth details: ')
+                    file_path = input('Please type in the path to your auth (default auth.txt)\n')
+                    file_path = "auth.txt" if file_path == "" else file_path
                     try:
                         username, password = get_auth_by_file(file_path)
-                        print(file_path)
+                        print("You selected: " + file_path)
                         break
                     except FileNotFoundError:
                         print(f"Not found file at path: {file_path}")
                 pass
-            else: # console credentials
+            else:  # console credentials
                 username, password = get_auth_by_console()
 
-            keyword = input(f'Search: (any text as you would do on Instagram): ')
-            return username, password, keyword
+            while True:
+                keyword = input(f'Please type in your search keyword as you would do on Instagram (#cats, @beyonce, etc):\n')
+                if keyword != "":
+                    return username, password, keyword
+                else:
+                    print("Please type a search keyword!")
 
         except KeyboardInterrupt:
             print("\nSee ya!")
             sys.exit(0)
+
 
 def main():
 
