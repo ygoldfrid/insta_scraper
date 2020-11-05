@@ -1,16 +1,17 @@
 import requests
 from bs4 import BeautifulSoup
 import argparse
+import getpass
+import sys
 import time
 import re
 from selenium import webdriver
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-# from selenium.webdriver.common.keys import Keys
 
 
-def scrape_insta(username, password, key_type, keyword, limit=50):
+def scrape_insta(username, password, keyword, limit=50):
     # Setting the driver and opening Instagram
     driver = webdriver.Chrome()
     driver.get("https://www.instagram.com/")
@@ -40,12 +41,15 @@ def scrape_insta(username, password, key_type, keyword, limit=50):
         .until(expected_conditions.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Not Now')]")))
     not_now_btn2.click()
 
+    keyword = "#" + keyword if keyword[0] not in ["@", "#"] else keyword
+
     # Finding the search box by XPATH and typing in the keyword
     search_box = WebDriverWait(driver, 10)\
         .until(expected_conditions.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']")))
     search_box.clear()
-    keyword = "#" + keyword if key_type == "hashtag" else keyword
     search_box.send_keys(keyword)
+
+    keyword = keyword[1:] if keyword[0] == "@" else keyword
 
     # Finding the hashtag button by XPATH and clicking on it
     hashtag_btn = WebDriverWait(driver, 10)\
@@ -117,22 +121,18 @@ def print_content(driver, limit):
 
 def get_auth_by_file(filename):
     with open(filename, "r") as file:
-        username = file.readline()
-        password = file.readline()
+        username = file.readline().strip()
+        password = file.readline().strip()
     return username, password
 
 
 def get_auth_by_console():
-
-    """TODO: Auth through command line"""
-
-    print("Logging in from console")
-    return "", ""
+    username = input('Username: ')
+    password = getpass.getpass(prompt="Password: ", stream=None)
+    return username, password
 
 
-def main():
-    """TODO: Develop nice user interface"""
-
+def args_credentials():
     parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
     parser.add_argument("-c", "--console", help="option for logging in through the console", action="store_true"),
     parser.add_argument("-f", "--filename", help="option for logging in through a file\n"
@@ -149,8 +149,84 @@ def main():
             username, password = get_auth_by_file(args.filename)
         except FileNotFoundError:
             print("The provided file does not exist")
+    return username, password
 
-    scrape_insta(username, password, key_type=args.key_type, keyword=args.keyword, limit=1000)
+
+def interactive_credentials():
+    print('\nWelcome to Insta Scrapper developed by Yaniv Goldfrid and Dana Velibekov')
+    while True:
+        try:
+            while True:
+                choice = input('Please select preferred method of authentication:\n[f]ile (default)\n[c]onsole\n')
+                choice = "f" if choice == "" else choice
+                if choice.lower() in ['f', 'c']:
+                    break
+                else:
+                    print("Invalid option")
+
+            if choice.lower() == 'f':  # file credentials
+                while True:
+                    file_path = input('Please type in the path to your auth (default auth.txt)\n')
+                    file_path = "auth.txt" if file_path == "" else file_path
+                    try:
+                        username, password = get_auth_by_file(file_path)
+                        print("You selected: " + file_path)
+                        break
+                    except FileNotFoundError:
+                        print(f"Not found file at path: {file_path}")
+                pass
+            else:  # console credentials
+                username, password = get_auth_by_console()
+
+            while True:
+                keyword = input(f'Please type in your search keyword as you would do on Instagram (#cats, @beyonce, etc):\n')
+                if keyword != "":
+                    return username, password, keyword
+                else:
+                    print("Please type a search keyword!")
+
+        except KeyboardInterrupt:
+            print("\nSee ya!")
+            sys.exit(0)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
+    ex_group = parser.add_mutually_exclusive_group()
+    ex_group.add_argument("-i", "--interactive", action="store_true", help="run through nice interactive ui")
+    ex_group.add_argument("-k", "--keyword", help="the keyword to find in instagram (by hashtag or username)")
+    parser.add_argument("-f", "--filename", help="option for logging in through a file\n"
+                                                 "username must be in the first line and password in the second one")
+    parser.add_argument("-l", "--limit", default=1000, help="limit of instagram posts to scrap")
+    args = parser.parse_args()
+
+    username, password, keyword = "", "", ""
+
+    if args.interactive:
+        if args.filename:
+            print("usage: insta.py [-h] [-i | -k KEYWORD] [-f FILENAME]")
+            print("insta.py: error: argument -f/--filename: not allowed with argument -i/--interactive")
+            quit(0)
+        username, password, keyword = interactive_credentials()
+    elif args.keyword:
+        keyword = args.keyword
+        filename = args.filename if args.filename else "auth.txt"
+
+        try:
+            username, password = get_auth_by_file(filename)
+        except FileNotFoundError:
+            print("The provided file does not exist")
+            quit(0)
+    else:
+        print("usage: insta.py [-h] [-i | -k KEYWORD] [-f FILENAME]")
+        print("insta.py: error: required to add either argument -i/--interactive or argument -k/--keyword")
+        quit(0)
+
+    # If all good we go scraping
+    scrape_insta(username=username,
+                 password=password,
+                 keyword=keyword,
+                 limit=args.limit)
 
 
 if __name__ == "__main__":
