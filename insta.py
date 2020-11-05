@@ -152,7 +152,7 @@ def args_credentials():
     return username, password
 
 
-def console_credentials():
+def interactive_credentials():
     print('\nWelcome to Insta Scrapper developed by Yaniv Goldfrid and Dana Velibekov')
     while True:
         try:
@@ -191,13 +191,42 @@ def console_credentials():
 
 
 def main():
+    parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
+    ex_group = parser.add_mutually_exclusive_group()
+    ex_group.add_argument("-i", "--interactive", action="store_true", help="run through nice interactive ui")
+    ex_group.add_argument("-k", "--keyword", help="the keyword to find in instagram (by hashtag or username)")
+    parser.add_argument("-f", "--filename", help="option for logging in through a file\n"
+                                                 "username must be in the first line and password in the second one")
+    parser.add_argument("-l", "--limit", default=1000, help="limit of instagram posts to scrap")
+    args = parser.parse_args()
 
-    # main call to function
-    username, password, keyword = console_credentials()
+    username, password, keyword = "", "", ""
+
+    if args.interactive:
+        if args.filename:
+            print("usage: insta.py [-h] [-i | -k KEYWORD] [-f FILENAME]")
+            print("insta.py: error: argument -f/--filename: not allowed with argument -i/--interactive")
+            quit(0)
+        username, password, keyword = interactive_credentials()
+    elif args.keyword:
+        keyword = args.keyword
+        filename = args.filename if args.filename else "auth.txt"
+
+        try:
+            username, password = get_auth_by_file(filename)
+        except FileNotFoundError:
+            print("The provided file does not exist")
+            quit(0)
+    else:
+        print("usage: insta.py [-h] [-i | -k KEYWORD] [-f FILENAME]")
+        print("insta.py: error: required to add either argument -i/--interactive or argument -k/--keyword")
+        quit(0)
+
+    # If all good we go scraping
     scrape_insta(username=username,
                  password=password,
                  keyword=keyword,
-                 limit=1000)
+                 limit=args.limit)
 
 
 if __name__ == "__main__":
