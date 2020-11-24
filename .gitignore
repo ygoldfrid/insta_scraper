@@ -2,3 +2,5 @@
 env/
 auth.txt
 *.log
+*.db
+__pycache__/
