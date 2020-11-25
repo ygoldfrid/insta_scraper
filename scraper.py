@@ -75,36 +75,46 @@ def save_content(driver, limit, keyword):
     first_post.click()
 
     for _ in range(limit):
-        # We scrape the username
-        user_element = WebDriverWait(driver, 10)\
-            .until(EC.presence_of_element_located((By.CSS_SELECTOR, config.USER_SELECTOR)))
-        username = BeautifulSoup(user_element.get_attribute("innerHTML"), "html.parser").text
+        try:
+            # We scrape the username
+            user_element = WebDriverWait(driver, 10)\
+                .until(EC.presence_of_element_located((By.CSS_SELECTOR, config.USER_SELECTOR)))
+            username = BeautifulSoup(user_element.get_attribute("innerHTML"), "html.parser").text
 
-        # We scrape the link
-        link_element = WebDriverWait(driver, 10)\
-            .until(EC.presence_of_element_located((By.CSS_SELECTOR, config.LINK_SELECTOR)))
-        link = BeautifulSoup(link_element.get_attribute("href"), "html.parser").text
+            # We scrape the link
+            link_element = WebDriverWait(driver, 10)\
+                .until(EC.presence_of_element_located((By.CSS_SELECTOR, config.LINK_SELECTOR)))
+            link = BeautifulSoup(link_element.get_attribute("href"), "html.parser").text
 
-        # We scrape the likes
-        likes_element = WebDriverWait(driver, 10)\
-            .until(EC.presence_of_element_located((By.CSS_SELECTOR,config.LIKES_SELECTOR)))
-        spans = BeautifulSoup(likes_element.get_attribute("innerHTML"), "html.parser").find_all("span")
-        likes = 0 if len(spans) == 0 else spans[-1].text
+            # We scrape the likes
+            likes_element = WebDriverWait(driver, 10)\
+                .until(EC.presence_of_element_located((By.CSS_SELECTOR,config.LIKES_SELECTOR)))
+            spans = BeautifulSoup(likes_element.get_attribute("innerHTML"), "html.parser").find_all("span")
 
-        # We scrape the hashtags
-        hash_element = WebDriverWait(driver, 10) \
-            .until(EC.presence_of_element_located((By.CSS_SELECTOR, config.HASH_SELECTOR)))
-        anchors = BeautifulSoup(hash_element.get_attribute("innerHTML"), "html.parser").find_all("a")
-        hash_links = [anchor.get("href") for anchor in anchors if "/explore/tags/" in anchor.get("href")]
-        hashtags = [hash_link.split("/")[-2] for hash_link in hash_links]
+            # Fixing instagram specific issue when scraping likes
+            if len(spans) == 0:
+                likes = 0
+            elif spans[-1].text == "1 view":
+                likes = 1
+            else:
+                likes = spans[-1].text
 
-        # We save the user, post and hashtags in the db
-        user_id = db.add_simple_user(username)
-        post_id = db.add_post(user_id, link, likes)
-        for hashtag in hashtags:
-            hashtag_id = db.add_hashtag(hashtag)
-            db.add_post_hashtag(post_id, hashtag_id)
-
-        next_post = WebDriverWait(driver, 10) \
-            .until(EC.presence_of_element_located((By.CLASS_NAME, "coreSpriteRightPaginationArrow")))
-        next_post.click()
+            # We scrape the hashtags
+            hash_element = WebDriverWait(driver, 10) \
+                .until(EC.presence_of_element_located((By.CSS_SELECTOR, config.HASH_SELECTOR)))
+            anchors = BeautifulSoup(hash_element.get_attribute("innerHTML"), "html.parser").find_all("a")
+            hash_links = [anchor.get("href") for anchor in anchors if "/explore/tags/" in anchor.get("href")]
+            hashtags = [hash_link.split("/")[-2] for hash_link in hash_links]
+        except Exception:
+            print("Post took too long - SKIPPING")
+        else:
+            # We save the user, post and hashtags in the db
+            user_id = db.add_simple_user(username)
+            post_id = db.add_post(user_id, link, likes)
+            for hashtag in hashtags:
+                hashtag_id = db.add_hashtag(hashtag)
+                db.add_post_hashtag(post_id, hashtag_id)
+        finally:
+            next_post = WebDriverWait(driver, 10) \
+                .until(EC.presence_of_element_located((By.CLASS_NAME, "coreSpriteRightPaginationArrow")))
+            next_post.click()
