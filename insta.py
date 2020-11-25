@@ -47,14 +47,14 @@ def interactive_credentials():
             if choice.lower() not in ['f', 'c']:
                 print("Invalid option")
 
+        username, password = '', ''
         if choice.lower() == 'f':  # file credentials
-            while True:
+            while len(username) == 0 and len(password) == 0:
                 file_path = input('Please type in the path to your auth (default auth.txt)\n')
                 file_path = "auth.txt" if file_path == "" else file_path
                 try:
                     username, password = get_auth_by_file(file_path)
                     print("You selected: " + file_path)
-                    break
                 except FileNotFoundError:
                     print(f"Not found file at path: {file_path}")
             pass
