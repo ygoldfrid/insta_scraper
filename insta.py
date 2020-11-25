@@ -39,40 +39,38 @@ def args_credentials():
 
 def interactive_credentials():
     print('\nWelcome to Insta Scrapper developed by Yaniv Goldfrid and Dana Velibekov')
-    while True:
-        try:
+    try:
+        choice = ''
+        while choice.lower() not in ['f', 'c']:
+            choice = input('Please select preferred method of authentication:\n[f]ile (default)\n[c]onsole\n')
+            choice = "f" if choice == "" else choice
+            if choice.lower() not in ['f', 'c']:
+                print("Invalid option")
+
+        if choice.lower() == 'f':  # file credentials
             while True:
-                choice = input('Please select preferred method of authentication:\n[f]ile (default)\n[c]onsole\n')
-                choice = "f" if choice == "" else choice
-                if choice.lower() in ['f', 'c']:
+                file_path = input('Please type in the path to your auth (default auth.txt)\n')
+                file_path = "auth.txt" if file_path == "" else file_path
+                try:
+                    username, password = get_auth_by_file(file_path)
+                    print("You selected: " + file_path)
                     break
-                else:
-                    print("Invalid option")
+                except FileNotFoundError:
+                    print(f"Not found file at path: {file_path}")
+            pass
+        else:  # console credentials
+            username, password = get_auth_by_console()
 
-            if choice.lower() == 'f':  # file credentials
-                while True:
-                    file_path = input('Please type in the path to your auth (default auth.txt)\n')
-                    file_path = "auth.txt" if file_path == "" else file_path
-                    try:
-                        username, password = get_auth_by_file(file_path)
-                        print("You selected: " + file_path)
-                        break
-                    except FileNotFoundError:
-                        print(f"Not found file at path: {file_path}")
-                pass
-            else:  # console credentials
-                username, password = get_auth_by_console()
+        while True:
+            keyword = input(f'Please type in your search keyword as you would do on Instagram (#cats, @beyonce, etc):\n')
+            if keyword != "":
+                return username, password, keyword
+            else:
+                print("Please type a search keyword!")
 
-            while True:
-                keyword = input(f'Please type in your search keyword as you would do on Instagram (#cats, @beyonce, etc):\n')
-                if keyword != "":
-                    return username, password, keyword
-                else:
-                    print("Please type a search keyword!")
-
-        except KeyboardInterrupt:
-            print("\nSee ya!")
-            sys.exit(0)
+    except KeyboardInterrupt:
+        print("\nSee ya!")
+        sys.exit(0)
 
 
 def main():
