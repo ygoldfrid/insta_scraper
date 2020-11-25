@@ -95,12 +95,13 @@ def main():
         try:
             username, password = get_auth_by_file(filename)
         except FileNotFoundError:
-            print("Neither the credentials file were provided nor the default auth.txt exists")
+            print("Neither the credentials file were provided nor the default auth.txt were found")
             quit(0)
 
-    # interactive mode
+    # interactive mode (default)
     else:
         username, password, keyword = interactive_credentials()
+
     # We initialize the DB
     db.initialize()
 
