@@ -11,7 +11,7 @@ It is fully automated, uses  BeautifulSoup and Selenium modules (please see requ
 The programm can be run in two ways from Terminal:
   * Via the interactive menu. The authentication is part of the process. No arguments required.
   * Via arguments. The authentication will be done either from `filename` provided as an argument or from default file named "./auth.txt".
-  > Note: Arguments mode is based on `keyword` argument. Once provided the programm will run in this mode.
+  > Note: Arguments mode is launched with `keyword` argument. Once provided the programm will run in this mode.
 
 **Not to worry, your data is not stored anywhere**
 
