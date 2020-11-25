@@ -78,36 +78,29 @@ def interactive_credentials():
 
 def main():
     parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
-    ex_group = parser.add_mutually_exclusive_group()
-    ex_group.add_argument("-i", "--interactive", action="store_true", help="run through nice interactive ui")
-    ex_group.add_argument("-k", "--keyword", help="the keyword to find in instagram (by hashtag or username)")
-    parser.add_argument("-f", "--filename", help="option for logging in through a file\n"
-                                                 "username must be in the first line and password in the second one")
+    # used only within arguments mode
+    parser.add_argument("-k", "--keyword", help="the keyword to find in instagram (by hashtag or username)")
     parser.add_argument("-l", "--limit", default=1000, help="limit of instagram posts to scrap")
+    parser.add_argument("-f", "--filename", help="option for logging in through a file\n"
+                                            "username must be in the first line and password in the second one")
     args = parser.parse_args()
 
     username, password, keyword = "", "", ""
 
-    if args.interactive:
-        if args.filename:
-            print("usage: insta.py [-h] [-i | -k KEYWORD] [-f FILENAME]")
-            print("insta.py: error: argument -f/--filename: not allowed with argument -i/--interactive")
-            quit(0)
-        username, password, keyword = interactive_credentials()
-    elif args.keyword:
+    # cli mode
+    if args.keyword:
         keyword = args.keyword
         filename = args.filename if args.filename else "auth.txt"
 
         try:
             username, password = get_auth_by_file(filename)
         except FileNotFoundError:
-            print("The provided file does not exist")
+            print("Neither the credentials file were provided nor the default auth.txt exists")
             quit(0)
-    else:
-        print("usage: insta.py [-h] [-i | -k KEYWORD] [-f FILENAME]")
-        print("insta.py: error: required to add either argument -i/--interactive or argument -k/--keyword")
-        quit(0)
 
+    # interactive mode
+    else:
+        username, password, keyword = interactive_credentials()
     # We initialize the DB
     db.initialize()
 
