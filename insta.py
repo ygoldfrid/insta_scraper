@@ -1,5 +1,4 @@
 import argparse
-import getpass
 import sys
 from scraper import scrape_data
 import db
@@ -14,7 +13,7 @@ def get_auth_by_file(filename):
 
 def get_auth_by_console():
     username = input('Username: ')
-    password = getpass.getpass(prompt="Password: ", stream=None)
+    password = input('Password: ')
     return username, password
 
 
