@@ -61,12 +61,13 @@ def interactive_credentials():
         else:  # console credentials
             username, password = get_auth_by_console()
 
-        while True:
+        keyword = ''
+        while len(keyword) == 0:
             keyword = input(f'Please type in your search keyword as you would do on Instagram (#cats, @beyonce, etc):\n')
-            if keyword != "":
-                return username, password, keyword
-            else:
+            if keyword == '':
                 print("Please type a search keyword!")
+
+        return username, password, keyword
 
     except KeyboardInterrupt:
         print("\nSee ya!")
