@@ -13,6 +13,7 @@ LINK_SELECTOR = "body > div._2dDPU.CkGkG > div.zZYga > div > article > div.eo2As
 LIKES_SELECTOR = "body > div._2dDPU.CkGkG > div.zZYga > div > article > div.eo2As > section.EDfFK.ygqzn > div"
 HASH_SELECTOR = "body > div._2dDPU.CkGkG > div.zZYga > div > article > div.eo2As > div.EtaWk > ul > div >" \
                 " li > div > div > div.C4VMK"
+NEXT_POST_CLASS = "coreSpriteRightPaginationArrow"
 
 # Authentication process selectors
 AUTH_USER_SEL = "input[name='username']"

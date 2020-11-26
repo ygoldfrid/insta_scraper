@@ -12,10 +12,10 @@ def initialize():
                 cur.execute('''
                 CREATE TABLE user (
                     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name VARCHAR(255),    
                     username VARCHAR(255) UNIQUE,
-                    n_of_followers INTEGER,
-                    n_of_following INTEGER);
+                    full_name VARCHAR(255),
+                    followers INTEGER,
+                    following INTEGER);
                     ''')
                 cur.execute('''
                 CREATE TABLE post (
@@ -41,14 +41,22 @@ def initialize():
                     ''')
 
 
-def add_user(name, username, n_of_followers, n_of_following):
-    user_id = add_to_db("INSERT INTO user (name, username, n_of_followers, n_of_following) "
-                        "VALUES (?, ?, ?, ?, ?, ?)",
-                        [name, username, n_of_followers, n_of_following])
+def add_user(user):
+    # If exists we return it, otherwise we create it
+    username = user["username"]
+    user_id = query_db(f"SELECT user_id FROM user WHERE username = '{username}'")
+
     if user_id:
-        return user_id
+        print("User already exists - Not creating:", username)
+        return user_id[0]
     else:
-        return query_db(f"SELECT id FROM user WHERE username = {username}")
+        print("Created User:", username)
+        return add_to_db("INSERT INTO user (username, full_name, followers, following) "
+                         "VALUES (?, ?, ?, ?)",
+                         [username,
+                          user["full_name"],
+                          user["followers"],
+                          user["following"]])
 
 
 def add_simple_user(username):
@@ -59,7 +67,7 @@ def add_simple_user(username):
         print("User already exists - Not creating:", username)
         return user_id[0]
     else:
-        print("Created User:", username)
+        print("Created Simple User:", username)
         return add_to_db("INSERT INTO user (username) "
                          "VALUES (?)",
                          [username])
