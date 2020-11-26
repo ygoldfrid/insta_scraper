@@ -1,6 +1,7 @@
 .idea/
 env/
 auth.txt
+db_auth.txt
 *.log
 *.db
 __pycache__/

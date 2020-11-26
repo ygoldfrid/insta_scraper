@@ -1,6 +1,6 @@
 # Basic info
 BASE_URL = "https://www.instagram.com/"
-DB_FILENAME = 'insta.db'
+AUTH_DB_FILE = 'db_auth.txt'
 
 # Scraping process selectors
 POST_SELECTOR_BY_USER = "#react-root > section > main > div > div._2z6nI > article > div:nth-child(1) >" \

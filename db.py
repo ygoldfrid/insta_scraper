@@ -1,44 +1,44 @@
-import sqlite3
-import os
-import contextlib
+import mysql.connector
 import config
 
 
 def initialize():
-    if not os.path.exists(config.DB_FILENAME):
-        with contextlib.closing(sqlite3.connect(config.DB_FILENAME)) as con:
-            with con:
-                cur = con.cursor()
-                cur.execute('''
-                CREATE TABLE user (
-                    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username VARCHAR(255) UNIQUE,
-                    full_name VARCHAR(255),
-                    followers INTEGER,
-                    following INTEGER);
-                    ''')
-                cur.execute('''
-                CREATE TABLE post (
-                    post_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
-                    link VARCHAR(255) UNIQUE NOT NULL,
-                    n_of_likes INTEGER,
-                    FOREIGN KEY (user_id) REFERENCES user (user_id));
-                    ''')
-                cur.execute('''
-                CREATE TABLE hashtag (
-                    hashtag_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    value VARCHAR(255) UNIQUE NOT NULL);
-                    ''')
-                cur.execute('''
-                CREATE TABLE post_hashtag (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    post_id INTEGER NOT NULL,
-                    hashtag_id INTEGER NOT NULL,
-                    FOREIGN KEY (post_id) REFERENCES post (post_id),
-                    FOREIGN KEY (hashtag_id) REFERENCES hashtag (hashtag_id)
-                    UNIQUE(post_id, hashtag_id));
-                    ''')
+    with open(config.AUTH_DB_FILE, "r") as file:
+        host = file.readline().strip()
+        user = file.readline().strip()
+        password = file.readline().strip()
+
+    with mysql.connector.connect(host=host, user=user, password=password) as conn:
+        with conn:
+            cur = conn.cursor()
+            cur.execute("CREATE DATABASE IF NOT EXISTS insta")
+            cur.execute("USE insta")
+            cur.execute('''CREATE TABLE IF NOT EXISTS user (
+                           user_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                           username VARCHAR(255) UNIQUE,
+                           full_name VARCHAR(255),
+                           followers INTEGER,
+                           following INTEGER);
+                           ''')
+            cur.execute('''CREATE TABLE IF NOT EXISTS post (
+                           post_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                           user_id INTEGER NOT NULL,
+                           link VARCHAR(255) UNIQUE NOT NULL,
+                           likes INTEGER,
+                           FOREIGN KEY (user_id) REFERENCES user (user_id));
+                           ''')
+            cur.execute('''CREATE TABLE IF NOT EXISTS hashtag (
+                           hashtag_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                           value VARCHAR(255) UNIQUE NOT NULL);
+                           ''')
+            cur.execute('''CREATE TABLE IF NOT EXISTS post_hashtag (
+                           post_hashtag_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                           post_id INTEGER NOT NULL,
+                           hashtag_id INTEGER NOT NULL,
+                           FOREIGN KEY (post_id) REFERENCES post (post_id),
+                           FOREIGN KEY (hashtag_id) REFERENCES hashtag (hashtag_id),
+                           UNIQUE KEY (post_id, hashtag_id));
+                           ''')
 
 
 def add_user(user):
@@ -52,7 +52,7 @@ def add_user(user):
     else:
         print("Created User:", username)
         return add_to_db("INSERT INTO user (username, full_name, followers, following) "
-                         "VALUES (?, ?, ?, ?)",
+                         "VALUES (%s, %s, %s, %s)",
                          [username,
                           user["full_name"],
                           user["followers"],
@@ -69,11 +69,11 @@ def add_simple_user(username):
     else:
         print("Created Simple User:", username)
         return add_to_db("INSERT INTO user (username) "
-                         "VALUES (?)",
+                         "VALUES (%s)",
                          [username])
 
 
-def add_post(user_id, link, n_of_likes):
+def add_post(user_id, link, likes):
     # If exists we return it, otherwise we create it
     post_id = query_db(f"SELECT post_id FROM post WHERE link = '{link}'")
 
@@ -82,9 +82,9 @@ def add_post(user_id, link, n_of_likes):
         return post_id[0]
     else:
         print("Created Post:", link)
-        return add_to_db("INSERT INTO post (user_id, link, n_of_likes) "
-                         "VALUES (?, ?, ?)",
-                         [user_id, link, n_of_likes])
+        return add_to_db("INSERT INTO post (user_id, link, likes) "
+                         "VALUES (%s, %s, %s)",
+                         [user_id, link, likes])
 
 
 def add_hashtag(value):
@@ -97,42 +97,52 @@ def add_hashtag(value):
     else:
         print("Created Hashtag:", value)
         return add_to_db("INSERT INTO hashtag (value) "
-                         "VALUES (?)",
+                         "VALUES (%s)",
                          [value])
 
 
 def add_post_hashtag(post_id, hashtag_id):
     # If exists we return it, otherwise we create it
-    ph_id = query_db(f"SELECT id FROM post_hashtag WHERE post_id = '{post_id}' AND hashtag_id = '{hashtag_id}'")
+    ph_id = query_db(f"SELECT post_hashtag_id FROM post_hashtag WHERE post_id = '{post_id}' AND hashtag_id = '{hashtag_id}'")
 
     if ph_id:
         return ph_id[0]
     else:
         return add_to_db("INSERT INTO post_hashtag (post_id, hashtag_id) "
-                         "VALUES (?, ?)",
+                         "VALUES (%s, %s)",
                          [post_id, hashtag_id])
 
 
 def query_db(command):
-    with contextlib.closing(sqlite3.connect(config.DB_FILENAME)) as con:
-        with con:
-            cur = con.cursor()
-            try:
-                cur.execute(command)
-                return cur.fetchone()
-            except sqlite3.IntegrityError as ex:
-                print(ex)
+    with open(config.AUTH_DB_FILE, "r") as file:
+        host = file.readline().strip()
+        user = file.readline().strip()
+        password = file.readline().strip()
+
+    conn = mysql.connector.connect(host=host, user=user, password=password, database="insta")
+    cur = conn.cursor(buffered=True)
+    try:
+        cur.execute(command)
+        conn.commit()
+        return cur.fetchone()
+    except Exception as ex:
+        print(ex)
 
 
 def add_to_db(command, values):
-    with contextlib.closing(sqlite3.connect(config.DB_FILENAME)) as con:
-        with con:
-            cur = con.cursor()
-            try:
-                cur.execute(command, values)
-            except sqlite3.IntegrityError as ex:
-                print(ex)
-            else:
-                return cur.lastrowid
+    with open(config.AUTH_DB_FILE, "r") as file:
+        host = file.readline().strip()
+        user = file.readline().strip()
+        password = file.readline().strip()
+
+    conn = mysql.connector.connect(host=host, user=user, password=password, database="insta")
+    cur = conn.cursor(buffered=True)
+    try:
+        cur.execute(command, values)
+        conn.commit()
+        return cur.lastrowid
+    except Exception as ex:
+        print(ex)
+
 
 
