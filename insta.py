@@ -1,5 +1,4 @@
 import argparse
-import getpass
 import sys
 from scraper import scrape_data
 import db
@@ -14,7 +13,7 @@ def get_auth_by_file(filename):
 
 def get_auth_by_console():
     username = input('Username: ')
-    password = getpass.getpass(prompt="Password: ", stream=None)
+    password = input('Password: ')
     return username, password
 
 
@@ -40,73 +39,66 @@ def args_credentials():
 
 def interactive_credentials():
     print('\nWelcome to Insta Scrapper developed by Yaniv Goldfrid and Dana Velibekov')
-    while True:
-        try:
-            while True:
-                choice = input('Please select preferred method of authentication:\n[f]ile (default)\n[c]onsole\n')
-                choice = "f" if choice == "" else choice
-                if choice.lower() in ['f', 'c']:
-                    break
-                else:
-                    print("Invalid option")
+    try:
+        choice = ''
+        while choice.lower() not in ['f', 'c']:
+            choice = input('Please select preferred method of authentication:\n[f]ile (default)\n[c]onsole\n')
+            choice = "f" if choice == "" else choice
+            if choice.lower() not in ['f', 'c']:
+                print("Invalid option")
 
-            if choice.lower() == 'f':  # file credentials
-                while True:
-                    file_path = input('Please type in the path to your auth (default auth.txt)\n')
-                    file_path = "auth.txt" if file_path == "" else file_path
-                    try:
-                        username, password = get_auth_by_file(file_path)
-                        print("You selected: " + file_path)
-                        break
-                    except FileNotFoundError:
-                        print(f"Not found file at path: {file_path}")
-                pass
-            else:  # console credentials
-                username, password = get_auth_by_console()
+        username, password = '', ''
+        if choice.lower() == 'f':  # file credentials
+            while len(username) == 0 and len(password) == 0:
+                file_path = input('Please type in the path to your auth (default auth.txt)\n')
+                file_path = "auth.txt" if file_path == "" else file_path
+                try:
+                    username, password = get_auth_by_file(file_path)
+                    print("You selected: " + file_path)
+                except FileNotFoundError:
+                    print(f"Not found file at path: {file_path}")
+            pass
+        else:  # console credentials
+            username, password = get_auth_by_console()
 
-            while True:
-                keyword = input(f'Please type in your search keyword as you would do on Instagram (#cats, @beyonce, etc):\n')
-                if keyword != "":
-                    return username, password, keyword
-                else:
-                    print("Please type a search keyword!")
+        keyword = ''
+        while len(keyword) == 0:
+            keyword = input(f'Please type in your search keyword as you would do on Instagram (#cats, @beyonce, etc):\n')
+            if keyword == '':
+                print("Please type a search keyword!")
 
-        except KeyboardInterrupt:
-            print("\nSee ya!")
-            sys.exit(0)
+        return username, password, keyword
+
+    except KeyboardInterrupt:
+        print("\nSee ya!")
+        sys.exit(0)
 
 
 def main():
     parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
-    ex_group = parser.add_mutually_exclusive_group()
-    ex_group.add_argument("-i", "--interactive", action="store_true", help="run through nice interactive ui")
-    ex_group.add_argument("-k", "--keyword", help="the keyword to find in instagram (by hashtag or username)")
-    parser.add_argument("-f", "--filename", help="option for logging in through a file\n"
-                                                 "username must be in the first line and password in the second one")
+    # used only within arguments mode
+    parser.add_argument("-k", "--keyword", help="the keyword to find in instagram (by hashtag or username)")
     parser.add_argument("-l", "--limit", default=1000, help="limit of instagram posts to scrap")
+    parser.add_argument("-f", "--filename", help="option for logging in through a file\n"
+                                            "username must be in the first line and password in the second one")
     args = parser.parse_args()
 
     username, password, keyword = "", "", ""
 
-    if args.interactive:
-        if args.filename:
-            print("usage: insta.py [-h] [-i | -k KEYWORD] [-f FILENAME]")
-            print("insta.py: error: argument -f/--filename: not allowed with argument -i/--interactive")
-            quit(0)
-        username, password, keyword = interactive_credentials()
-    elif args.keyword:
+    # cli mode
+    if args.keyword:
         keyword = args.keyword
         filename = args.filename if args.filename else "auth.txt"
 
         try:
             username, password = get_auth_by_file(filename)
         except FileNotFoundError:
-            print("The provided file does not exist")
+            print("Neither the credentials file were provided nor the default auth.txt were found")
             quit(0)
+
+    # interactive mode (default)
     else:
-        print("usage: insta.py [-h] [-i | -k KEYWORD] [-f FILENAME]")
-        print("insta.py: error: required to add either argument -i/--interactive or argument -k/--keyword")
-        quit(0)
+        username, password, keyword = interactive_credentials()
 
     # We initialize the DB
     db.initialize()
