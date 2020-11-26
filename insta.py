@@ -17,26 +17,6 @@ def get_auth_by_console():
     return username, password
 
 
-def args_credentials():
-    parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
-    parser.add_argument("-c", "--console", help="option for logging in through the console", action="store_true"),
-    parser.add_argument("-f", "--filename", help="option for logging in through a file\n"
-                                                 "username must be in the first line and password in the second one"),
-    parser.add_argument("key_type", help="which type page to look for", choices=["user", "hashtag"]),
-    parser.add_argument("keyword", help="the keyword to find in instagram"),
-    args = parser.parse_args()
-
-    username, password = "", ""
-    if args.console:
-        username, password = get_auth_by_console()
-    elif args.filename:
-        try:
-            username, password = get_auth_by_file(args.filename)
-        except FileNotFoundError:
-            print("The provided file does not exist")
-    return username, password
-
-
 def interactive_credentials():
     print('\nWelcome to Insta Scrapper developed by Yaniv Goldfrid and Dana Velibekov')
     try:
@@ -76,7 +56,7 @@ def interactive_credentials():
 
 def main():
     parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
-    # used only within arguments mode
+    # used only within cli mode
     parser.add_argument("-k", "--keyword", help="the keyword to find in instagram (by hashtag or username)")
     parser.add_argument("-l", "--limit", default=1000, help="limit of instagram posts to scrap")
     parser.add_argument("-f", "--filename", help="option for logging in through a file\n"

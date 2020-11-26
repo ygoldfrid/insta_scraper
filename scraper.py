@@ -115,6 +115,7 @@ def save_content(driver, limit, keyword):
                 hashtag_id = db.add_hashtag(hashtag)
                 db.add_post_hashtag(post_id, hashtag_id)
         finally:
+            # We go to the next post
             next_post = WebDriverWait(driver, 10) \
                 .until(EC.presence_of_element_located((By.CLASS_NAME, "coreSpriteRightPaginationArrow")))
             next_post.click()
