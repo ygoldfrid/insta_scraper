@@ -1,11 +1,8 @@
-import requests
-from bs4 import BeautifulSoup
-import time
-import re
 from selenium import webdriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
+from bs4 import BeautifulSoup
 import db
 import warnings
 import config
@@ -14,7 +11,7 @@ import config
 def scrape_data(username, password, keyword, limit=50):
     # Setting the driver and opening Instagram
     driver = webdriver.Chrome()
-    driver.get("https://www.instagram.com/")
+    driver.get(config.BASE_URL)
 
     # Login in, filling search boxes, etc
     fill_info(driver, username, password, keyword)
@@ -25,10 +22,8 @@ def scrape_data(username, password, keyword, limit=50):
 
 def fill_info(driver, username, password, keyword):
     # Finding the auth boxes by CSS Selectors
-    username_box = WebDriverWait(driver, 10) \
-        .until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='username']")))
-    password_box = WebDriverWait(driver, 10) \
-        .until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='password']")))
+    username_box = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, config.AUTH_USER_SEL)))
+    password_box = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, config.AUTH_PASS_SEL)))
 
     # Typing in the auth values provided
     username_box.clear()
@@ -37,31 +32,28 @@ def fill_info(driver, username, password, keyword):
     password_box.send_keys(password)
 
     # Finding the login button by CSS Selector and clicking on it
-    login_btn = WebDriverWait(driver, 10) \
-        .until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']")))
+    login_btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, config.SUBMIT_SELECTOR)))
     login_btn.click()
 
     # Finding the "not now" buttons by XPATH and clicking on them
-    not_now_btn = WebDriverWait(driver, 10) \
-        .until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Not Now')]")))
+    not_now_btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, config.NOT_NOW_XPATH)))
     not_now_btn.click()
-    not_now_btn2 = WebDriverWait(driver, 10) \
-        .until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Not Now')]")))
+    not_now_btn2 = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, config.NOT_NOW_XPATH)))
     not_now_btn2.click()
 
+    # If no user searched without # or @, we add a #
     keyword = "#" + keyword if keyword[0] not in ["@", "#"] else keyword
 
     # Finding the search box by XPATH and typing in the keyword
-    search_box = WebDriverWait(driver, 10) \
-        .until(EC.element_to_be_clickable((By.XPATH, "//input[@placeholder='Search']")))
+    search_box = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, config.SEARCH_XPATH)))
     search_box.clear()
     search_box.send_keys(keyword)
 
+    # For finding the right keyword in the list
     keyword = keyword[1:] if keyword[0] == "@" else keyword
 
     # Finding the hashtag button by XPATH and clicking on it
-    hashtag_btn = WebDriverWait(driver, 10) \
-        .until(EC.element_to_be_clickable((By.XPATH, f"//span[contains(text(), '{keyword}')]")))
+    hashtag_btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, config.hash_xpath(keyword))))
     hashtag_btn.click()
 
 
