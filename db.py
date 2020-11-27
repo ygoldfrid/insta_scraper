@@ -39,6 +39,18 @@ def initialize():
                            FOREIGN KEY (hashtag_id) REFERENCES hashtag (hashtag_id),
                            UNIQUE KEY (post_id, hashtag_id));
                            ''')
+            cur.execute('''CREATE TABLE IF NOT EXISTS location (
+                           location_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                           value VARCHAR(255) UNIQUE NOT NULL);
+                           ''')
+            cur.execute('''CREATE TABLE IF NOT EXISTS post_location (
+                           post_location_id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                           post_id INTEGER NOT NULL,
+                           location_id INTEGER NOT NULL,
+                           FOREIGN KEY (post_id) REFERENCES post (post_id),
+                           FOREIGN KEY (location_id) REFERENCES location (location_id),
+                           UNIQUE KEY (post_id, location_id));
+                           ''')
 
 
 def add_user(user):
@@ -103,7 +115,8 @@ def add_hashtag(value):
 
 def add_post_hashtag(post_id, hashtag_id):
     # If exists we return it, otherwise we create it
-    ph_id = query_db(f"SELECT post_hashtag_id FROM post_hashtag WHERE post_id = '{post_id}' AND hashtag_id = '{hashtag_id}'")
+    ph_id = query_db(f"SELECT post_hashtag_id FROM post_hashtag "
+                     f"WHERE post_id = '{post_id}' AND hashtag_id = '{hashtag_id}'")
 
     if ph_id:
         return ph_id[0]
@@ -111,6 +124,33 @@ def add_post_hashtag(post_id, hashtag_id):
         return add_to_db("INSERT INTO post_hashtag (post_id, hashtag_id) "
                          "VALUES (%s, %s)",
                          [post_id, hashtag_id])
+
+
+def add_location(value):
+    # If exists we return it, otherwise we create it
+    hash_id = query_db(f"SELECT location_id FROM location WHERE value = '{value}'")
+
+    if hash_id:
+        print("Location already exists - Not creating:", value)
+        return hash_id[0]
+    else:
+        print("Created Location:", value)
+        return add_to_db("INSERT INTO location (value) "
+                         "VALUES (%s)",
+                         [value])
+
+
+def add_post_location(post_id, location_id):
+    # If exists we return it, otherwise we create it
+    ph_id = query_db(f"SELECT post_location_id FROM post_location "
+                     f"WHERE post_id = '{post_id}' AND location_id = '{location_id}'")
+
+    if ph_id:
+        return ph_id[0]
+    else:
+        return add_to_db("INSERT INTO post_location (post_id, location_id) "
+                         "VALUES (%s, %s)",
+                         [post_id, location_id])
 
 
 def query_db(command):

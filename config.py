@@ -13,6 +13,8 @@ LINK_SELECTOR = "body > div._2dDPU.CkGkG > div.zZYga > div > article > div.eo2As
 LIKES_SELECTOR = "body > div._2dDPU.CkGkG > div.zZYga > div > article > div.eo2As > section.EDfFK.ygqzn > div"
 HASH_SELECTOR = "body > div._2dDPU.CkGkG > div.zZYga > div > article > div.eo2As > div.EtaWk > ul > div >" \
                 " li > div > div > div.C4VMK"
+LOCATION_SELECTOR = "body > div._2dDPU.CkGkG > div.zZYga > div > article > header > div.o-MQd.z8cbW >" \
+                    " div.M30cS > div.JF9hh"
 NEXT_POST_CLASS = "coreSpriteRightPaginationArrow"
 
 # Authentication process selectors

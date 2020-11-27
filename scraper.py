@@ -61,7 +61,7 @@ def fill_info(driver, username, password, keyword):
 
 
 def save_content(driver, limit, keyword):
-    # Ignoring warnings from Beatiful Soup (not relevant for this project)
+    # Ignoring warnings from Beautiful Soup (not relevant for this project)
     warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
 
     # There are different selectors for User page and in Hashtag page
@@ -95,7 +95,7 @@ def save_content(driver, limit, keyword):
             elif spans[-1].text == "1 view":
                 likes = 1
             else:
-                likes = spans[-1].text
+                likes = int(spans[-1].text.replace(",", ""))
 
             # We scrape the hashtags
             hash_element = WebDriverWait(driver, 10) \
@@ -103,18 +103,30 @@ def save_content(driver, limit, keyword):
             anchors = BeautifulSoup(hash_element.get_attribute("innerHTML"), "html.parser").find_all("a")
             hash_links = [anchor.get("href") for anchor in anchors if "/explore/tags/" in anchor.get("href")]
             hashtags = [hash_link.split("/")[-2] for hash_link in hash_links]
+
+            # We scrape the location
+            try:
+                location_element = WebDriverWait(driver, 10) \
+                    .until(EC.presence_of_element_located((By.CSS_SELECTOR, config.LOCATION_SELECTOR)))
+                location = location_element.find_element_by_class_name("O4GlU").text
+            except selenium.common.exceptions.NoSuchElementException:
+                location = None
+
         except selenium.common.exceptions.TimeoutException:
             print("Post took too long - SKIPPING")
         else:
             # We go scrape the user info (followers, following, etc)
             user_id = scrape_user(username)
 
-            # We save the user, post and hashtags in the db
+            # We save the user, post, hashtags and location in the db
             # user_id = db.add_simple_user(username)
             post_id = db.add_post(user_id, link, likes)
             for hashtag in hashtags:
                 hashtag_id = db.add_hashtag(hashtag)
                 db.add_post_hashtag(post_id, hashtag_id)
+            if location:
+                location_id = db.add_location(location)
+                db.add_post_location(post_id, location_id)
         finally:
             # We find the arrow for the next post and we click on it
             next_post = WebDriverWait(driver, 10) \
