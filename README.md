@@ -49,5 +49,42 @@ Then, follow the guidelines
 > python insta.py -k #cats -f credentials.txt -l 500 
 ```
 
+## Database support
+
+Instagram_erd.png
+
+>NOTE: In order to store the information you scrape to the database you need to have a file named `db_auth.txt` in your project directory.
+
+`db_auth.txt` must include (written in three separate lines):
+* localhost
+* root
+* personal password to your MySQL
+
+
+There are four tables:
+* Post
+* User
+* Hashtag
+* Post_hashtag
+* Geotag table
+
+
+
+## Logging
+
+Logging option is introduced to the functionality of the scraper. 
+
+
+**NOTE:** it is necessary to provide log level (for example INFO and the message that will be printed)
+Default option is to print logs BOTH to console and the *.log file but this can be easily changed for each situation.
+
+For example, to log Error output to the file the following command is needed:
+
+```
+logger.log(logging.ERROR, msg="File not found", destination=logger.FILE)
+```  
+
+
+
 
 
