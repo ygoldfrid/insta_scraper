@@ -61,10 +61,10 @@ def add_user(user):
     user_id = query_db(f"SELECT user_id FROM user WHERE username = '{username}'")
 
     if user_id:
-        logger.log(logging.INFO, msg=f"User already exists - Not creating: {username}", destination=logger.FILE)
+        logger.log(logging.INFO, msg=f"User already exists - Not creating: {username}")
         return user_id[0]
     else:
-        print("Created User:", username)
+        logger.log(logging.INFO, msg=f"Created User: {username}")
         return add_to_db("INSERT INTO user (username, full_name, followers, following) "
                          "VALUES (%s, %s, %s, %s)",
                          [username,
@@ -78,10 +78,10 @@ def add_simple_user(username):
     user_id = query_db(f"SELECT user_id FROM user WHERE username = '{username}'")
 
     if user_id:
-        print("User already exists - Not creating:", username)
+        logger.log(logging.INFO, msg=f"User already exists - Not creating: {username}")
         return user_id[0]
     else:
-        print("Created Simple User:", username)
+        logger.log(logging.INFO, msg=f"Created Simple User: {username}")
         return add_to_db("INSERT INTO user (username) "
                          "VALUES (%s)",
                          [username])
@@ -92,10 +92,10 @@ def add_post(user_id, link, likes):
     post_id = query_db(f"SELECT post_id FROM post WHERE link = '{link}'")
 
     if post_id:
-        print("Post already exists - Not creating:", link)
+        logger.log(logging.INFO, msg=f"Post already exists - Not creating:{link}")
         return post_id[0]
     else:
-        print("Created Post:", link)
+        logger.log(logging.INFO, msg=f"Created Post: {link}")
         return add_to_db("INSERT INTO post (user_id, link, likes) "
                          "VALUES (%s, %s, %s)",
                          [user_id, link, likes])
@@ -106,10 +106,10 @@ def add_hashtag(value):
     hash_id = query_db(f"SELECT hashtag_id FROM hashtag WHERE value = '{value}'")
 
     if hash_id:
-        print("Hashtag already exists - Not creating:", value)
+        logger.log(logging.INFO, msg=f"Hashtag already exists - Not creating:{value}")
         return hash_id[0]
     else:
-        print("Created Hashtag:", value)
+        logger.log(logging.INFO, msg=f"Created Hashtag:{value}")
         return add_to_db("INSERT INTO hashtag (value) "
                          "VALUES (%s)",
                          [value])
@@ -133,10 +133,10 @@ def add_location(value):
     hash_id = query_db(f"SELECT location_id FROM location WHERE value = '{value}'")
 
     if hash_id:
-        print("Location already exists - Not creating:", value)
+        logger.log(logging.INFO, msg=f"Location already exists - Not creating:{value}")
         return hash_id[0]
     else:
-        print("Created Location:", value)
+        logger.log(logging.INFO, msg=f"Created location:{value}")
         return add_to_db("INSERT INTO location (value) "
                          "VALUES (%s)",
                          [value])
