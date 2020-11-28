@@ -2,6 +2,8 @@ import argparse
 import sys
 from scraper import scrape_data
 import db
+import logger
+import logging
 
 
 def get_auth_by_file(filename):
@@ -55,6 +57,8 @@ def interactive_credentials():
 
 
 def main():
+    logger.configure()
+
     parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
     # used only within cli mode
     parser.add_argument("-k", "--keyword", help="the keyword to find in instagram (by hashtag or username)")
