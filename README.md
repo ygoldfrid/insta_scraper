@@ -76,6 +76,7 @@ Logging option is introduced to the functionality of the scraper.
 
 
 **NOTE:** it is necessary to provide log level (for example INFO and the message that will be printed)
+
 Default option is to print logs BOTH to console and the *.log file but this can be easily changed for each situation.
 
 For example, to log Error output to the file the following command is needed:
