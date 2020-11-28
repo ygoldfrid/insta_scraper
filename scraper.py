@@ -9,6 +9,8 @@ import warnings
 import json
 import config
 import db
+import logging
+import logger
 
 
 def scrape_data(username, password, keyword, limit=50):
@@ -113,7 +115,7 @@ def save_content(driver, limit, keyword):
                 location = None
 
         except selenium.common.exceptions.TimeoutException:
-            print("Post took too long - SKIPPING")
+            logger.log(logging.INFO, msg="Post took too long - SKIPPING")
         else:
             # We go scrape the user info (followers, following, etc)
             user_id = scrape_user(username)

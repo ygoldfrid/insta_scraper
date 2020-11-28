@@ -28,6 +28,8 @@ def interactive_credentials():
             choice = "f" if choice == "" else choice
             if choice.lower() not in ['f', 'c']:
                 print("Invalid option")
+                logger.log(logging.INFO,
+                           msg=f"User failed to chose between file and console interaction", destination=logger.FILE)
 
         username, password = '', ''
         if choice.lower() == 'f':  # file credentials
@@ -39,32 +41,41 @@ def interactive_credentials():
                     print("You selected: " + file_path)
                 except FileNotFoundError:
                     print(f"Not found file at path: {file_path}")
+                    logger.log(logging.ERROR,
+                               msg=f"Not found file at path: {file_path}", destination=logger.FILE)
             pass
         else:  # console credentials
             username, password = get_auth_by_console()
 
         keyword = ''
         while len(keyword) == 0:
-            keyword = input(f'Please type in your search keyword as you would do on Instagram (#cats, @beyonce, etc):\n')
+            keyword = input(
+                f'Please type in your search keyword as you would do on Instagram (#cats, @beyonce, etc):\n')
             if keyword == '':
                 print("Please type a search keyword!")
+                logger.log(logging.INFO,
+                           msg='User left the "keyword" blank', destination=logger.FILE)
 
         return username, password, keyword
 
+
     except KeyboardInterrupt:
         print("\nSee ya!")
+        logger.log(logging.INFO, msg='User ended the program (KeyboardInterrupt exception)', destination=logger.FILE)
         sys.exit(0)
 
 
 def main():
     logger.configure()
+    logger.log(logging.INFO,
+               msg="User started interacting with the scraper", destination=logger.FILE)
 
     parser = argparse.ArgumentParser(description="scrape instagram by keyword (hashtag)")
     # used only within cli mode
     parser.add_argument("-k", "--keyword", help="the keyword to find in instagram (by hashtag or username)")
     parser.add_argument("-l", "--limit", default=1000, help="limit of instagram posts to scrap")
     parser.add_argument("-f", "--filename", help="option for logging in through a file\n"
-                                            "username must be in the first line and password in the second one")
+                                                 "username must be in the first line and password in the second one")
     args = parser.parse_args()
 
     username, password, keyword = "", "", ""
@@ -76,13 +87,16 @@ def main():
 
         try:
             username, password = get_auth_by_file(filename)
+
         except FileNotFoundError:
-            print("Neither the credentials file were provided nor the default auth.txt were found")
+            logger.log(logging.ERROR,
+                       msg="Neither the credentials file were provided nor the default auth.txt were found")
             quit(0)
 
     # interactive mode (default)
     else:
         username, password, keyword = interactive_credentials()
+
 
     # We initialize the DB
     db.initialize()

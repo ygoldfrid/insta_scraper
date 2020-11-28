@@ -1,5 +1,7 @@
 import mysql.connector
 import config
+import logging
+import logger
 
 
 def initialize():
@@ -59,7 +61,7 @@ def add_user(user):
     user_id = query_db(f"SELECT user_id FROM user WHERE username = '{username}'")
 
     if user_id:
-        print("User already exists - Not creating:", username)
+        logger.log(logging.INFO, msg=f"User already exists - Not creating: {username}", destination=logger.FILE)
         return user_id[0]
     else:
         print("Created User:", username)
