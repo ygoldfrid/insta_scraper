@@ -1,14 +1,16 @@
 # Insta Scraper
 
-Insta scraper is a command-line application written in Python that scrapes information about
-  * Number of likes 
-  * Number of comments
+Insta scraper is a command-line application written in Python that scrapes information about:
+  * Users
+  * Posts
   * Hashtags
-  * Link to the post
-  * Username 
-It is fully automated, uses  BeautifulSoup and Selenium modules (please see requirements.txt for further information)
+  * Locations
+  
+It is fully automated, it uses Requests, BeautifulSoup and Selenium modules (please see requirements.txt for further information) and stores all the data into a MySQL database.
 
-The programm can be run in two ways from Terminal:
+**IMPORTANT** : You need to have a file called db_auth.txt with your MySQL credentials (see Database section below)
+
+The program can be run in two ways from Terminal:
   * Via the interactive menu. The authentication is part of the process. No arguments required.
   * Via arguments. The authentication will be done either from `filename` provided as an argument or from default file named "./auth.txt".
   > Note: Arguments mode is launched with `keyword` argument. Once provided the programm will run in this mode.
@@ -51,7 +53,7 @@ Then, follow the guidelines
 
 ## Database support
 
-Instagram_erd.png
+![GitHub Logo](/erd.png)
 
 >NOTE: In order to store the information you scrape to the database you need to have a file named `db_auth.txt` in your project directory.
 
@@ -59,16 +61,6 @@ Instagram_erd.png
 * localhost
 * root
 * personal password to your MySQL
-
-
-There are four tables:
-* Post
-* User
-* Hashtag
-* Post_hashtag
-* Geotag table
-
-
 
 ## Logging
 
