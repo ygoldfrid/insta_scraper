@@ -117,18 +117,14 @@ def save_content(driver, limit, keyword):
         except selenium.common.exceptions.TimeoutException:
             logger.log(logging.INFO, msg="Post took too long - SKIPPING")
         else:
-            # We go scrape the user info (followers, following, etc)
-            user_id = scrape_user(username)
-
-            # We save the user, post, hashtags and location in the db
-            # user_id = db.add_simple_user(username)
-            post_id = db.add_post(user_id, link, likes)
+            # We go save the user info (followers, following, etc)
+            user_id = save_user(username)
+            # We go save the post info (likes, views, timestamp, etc)
+            post_id = save_post(user_id, link, likes, location)
+            # We save the hashtags
             for hashtag in hashtags:
                 hashtag_id = db.add_hashtag(hashtag)
                 db.add_post_hashtag(post_id, hashtag_id)
-            if location:
-                location_id = db.add_location(location)
-                db.add_post_location(post_id, location_id)
         finally:
             # We find the arrow for the next post and we click on it
             next_post = WebDriverWait(driver, 10) \
@@ -136,15 +132,11 @@ def save_content(driver, limit, keyword):
             next_post.click()
 
 
-def scrape_user(username):
-    response = requests.get(config.BASE_URL + username)
-    page = BeautifulSoup(response.content, "html.parser")
-    content = page.find_all("script", {"type": "text/javascript"})
-    user_dict = json.loads(content[3].string.lstrip("window._sharedData = ").rstrip(";"))
-
-    data = user_dict["entry_data"]
-    if "ProfilePage" in data:
-        full_user = user_dict["entry_data"]["ProfilePage"][0]["graphql"]["user"]
+def save_user(username):
+    try:
+        response = requests.get(f"{config.BASE_URL}{username}/{config.DATA_TO_JSON}")
+        data = response.json()
+        full_user = data["graphql"]["user"]
         user = {
             "username": username,
             "full_name": full_user["full_name"],
@@ -157,8 +149,49 @@ def scrape_user(username):
             "is_private": full_user["is_private"],
             "is_verified": full_user["is_verified"],
             "is_business_account": full_user["is_business_account"],
-            "business_category_name": full_user["business_category_name"]
+            "business_category_name": full_user["business_category_name"],
+            "is_joined_recently": full_user["is_joined_recently"]
         }
         return db.add_user(user)
-    else:
+    except json.decoder.JSONDecodeError:
         return db.add_simple_user(username)
+
+
+def save_post(user_id, link, likes, location):
+    try:
+        response = requests.get(f"{link}{config.DATA_TO_JSON}")
+        data = response.json()
+
+        full_post = data["graphql"]["shortcode_media"]
+        post = {
+            "user_id": user_id,
+            "link": link,
+            "caption": full_post["edge_media_to_caption"]["edges"][-1]["node"]["text"][:255],
+            "likes": full_post["edge_media_preview_like"]["count"],
+            "comments": full_post["edge_media_to_parent_comment"]["count"],
+            "is_video": full_post["is_video"],
+            "views": full_post["video_view_count"] if "video_view_count" in full_post else None,
+            "timestamp": full_post["taken_at_timestamp"]
+        }
+        post_id = db.add_post(user_id, post)
+
+        full_location = full_post["location"]
+        if full_location:
+            address = json.loads(full_location["address_json"])
+            location = {
+                "name": full_location["name"],
+                "slug": full_location["slug"],
+                "country": address["country_code"],
+                "city": address["city_name"],
+                "zip_code": int(address["zip_code"]) if len(address["zip_code"]) > 0 in full_post else None
+            }
+            location_id = db.add_location(location)
+            db.add_post_location(post_id, location_id)
+
+        return post_id
+    except json.decoder.JSONDecodeError:
+        post_id = db.add_simple_post(user_id, link, likes)
+        if location:
+            location_id = db.add_simple_location(location)
+            db.add_post_location(post_id, location_id)
+        return post_id

@@ -20,13 +20,27 @@ def initialize():
                            username VARCHAR(255) UNIQUE,
                            full_name VARCHAR(255),
                            followers INTEGER,
-                           following INTEGER);
+                           following INTEGER,
+                           posts INTEGER,
+                           igtv_posts INTEGER,
+                           bio VARCHAR(255),
+                           external_url VARCHAR(255),
+                           is_private BOOLEAN,
+                           is_verified BOOLEAN,
+                           is_business_account BOOLEAN,
+                           business_category_name VARCHAR(255),
+                           is_joined_recently BOOLEAN);
                            ''')
             cur.execute('''CREATE TABLE IF NOT EXISTS post (
                            post_id INTEGER PRIMARY KEY AUTO_INCREMENT,
                            user_id INTEGER NOT NULL,
                            link VARCHAR(255) UNIQUE NOT NULL,
+                           caption VARCHAR(255),
                            likes INTEGER,
+                           comments INTEGER,
+                           is_video BOOLEAN,
+                           views INTEGER,
+                           timestamp INTEGER,
                            FOREIGN KEY (user_id) REFERENCES user (user_id));
                            ''')
             cur.execute('''CREATE TABLE IF NOT EXISTS hashtag (
@@ -43,7 +57,11 @@ def initialize():
                            ''')
             cur.execute('''CREATE TABLE IF NOT EXISTS location (
                            location_id INTEGER PRIMARY KEY AUTO_INCREMENT,
-                           value VARCHAR(255) UNIQUE NOT NULL);
+                           name VARCHAR(255) NOT NULL,
+                           slug VARCHAR(255) UNIQUE,
+                           country VARCHAR(255),
+                           city VARCHAR(255),
+                           zip_code INTEGER);
                            ''')
             cur.execute('''CREATE TABLE IF NOT EXISTS post_location (
                            post_location_id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -57,20 +75,41 @@ def initialize():
 
 def add_user(user):
     # If exists we return it, otherwise we create it
-    username = user["username"]
-    user_id = query_db(f"SELECT user_id FROM user WHERE username = '{username}'")
+    user_id = query_db("SELECT user_id FROM user WHERE username = '{}'".format(user["username"]))
 
     if user_id:
-        logger.log(logging.INFO, msg=f"User already exists - Not creating: {username}")
+        logger.log(logging.INFO, msg="User already exists - Not creating: {}".format(user["username"]))
         return user_id[0]
     else:
-        logger.log(logging.INFO, msg=f"Created User: {username}")
-        return add_to_db("INSERT INTO user (username, full_name, followers, following) "
-                         "VALUES (%s, %s, %s, %s)",
-                         [username,
+        logger.log(logging.INFO, msg="Created User: {}".format(user["username"]))
+        return add_to_db("INSERT INTO user ("
+                         "username, "
+                         "full_name, "
+                         "followers, "
+                         "following, "
+                         "posts, "
+                         "igtv_posts, "
+                         "bio, "
+                         "external_url, "
+                         "is_private, "
+                         "is_verified, "
+                         "is_business_account, "
+                         "business_category_name, "
+                         "is_joined_recently) "
+                         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                         [user["username"],
                           user["full_name"],
                           user["followers"],
-                          user["following"]])
+                          user["following"],
+                          user["posts"],
+                          user["igtv_posts"],
+                          user["bio"],
+                          user["external_url"],
+                          user["is_private"],
+                          user["is_verified"],
+                          user["is_business_account"],
+                          user["business_category_name"],
+                          user["is_joined_recently"]])
 
 
 def add_simple_user(username):
@@ -87,15 +126,44 @@ def add_simple_user(username):
                          [username])
 
 
-def add_post(user_id, link, likes):
+def add_post(user_id, post):
+    # If exists we return it, otherwise we create it
+    post_id = query_db("SELECT post_id FROM post WHERE link = '{}'".format(post["link"]))
+
+    if post_id:
+        logger.log(logging.INFO, msg="Post already exists - Not creating: {}".format(post["link"]))
+        return post_id[0]
+    else:
+        logger.log(logging.INFO, msg="Created Post: {}".format(post["link"]))
+        return add_to_db("INSERT INTO post ("
+                         "user_id, "
+                         "link, "
+                         "caption, "
+                         "likes, "
+                         "comments, "
+                         "is_video, "
+                         "views, "
+                         "timestamp) "
+                         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                         [user_id,
+                          post["link"],
+                          post["caption"],
+                          post["likes"],
+                          post["comments"],
+                          post["is_video"],
+                          post["views"],
+                          post["timestamp"]])
+
+
+def add_simple_post(user_id, link, likes):
     # If exists we return it, otherwise we create it
     post_id = query_db(f"SELECT post_id FROM post WHERE link = '{link}'")
 
     if post_id:
-        logger.log(logging.INFO, msg=f"Post already exists - Not creating:{link}")
+        logger.log(logging.INFO, msg=f"Post already exists - Not creating: {link}")
         return post_id[0]
     else:
-        logger.log(logging.INFO, msg=f"Created Post: {link}")
+        logger.log(logging.INFO, msg=f"Created Simple Post: {link}")
         return add_to_db("INSERT INTO post (user_id, link, likes) "
                          "VALUES (%s, %s, %s)",
                          [user_id, link, likes])
@@ -106,10 +174,10 @@ def add_hashtag(value):
     hash_id = query_db(f"SELECT hashtag_id FROM hashtag WHERE value = '{value}'")
 
     if hash_id:
-        logger.log(logging.INFO, msg=f"Hashtag already exists - Not creating:{value}")
+        logger.log(logging.INFO, msg=f"Hashtag already exists - Not creating: {value}")
         return hash_id[0]
     else:
-        logger.log(logging.INFO, msg=f"Created Hashtag:{value}")
+        logger.log(logging.INFO, msg=f"Created Hashtag: {value}")
         return add_to_db("INSERT INTO hashtag (value) "
                          "VALUES (%s)",
                          [value])
@@ -128,18 +196,41 @@ def add_post_hashtag(post_id, hashtag_id):
                          [post_id, hashtag_id])
 
 
-def add_location(value):
+def add_location(location):
     # If exists we return it, otherwise we create it
-    hash_id = query_db(f"SELECT location_id FROM location WHERE value = '{value}'")
+    hash_id = query_db("SELECT location_id FROM location WHERE name = '{}'".format(location["name"]))
 
     if hash_id:
-        logger.log(logging.INFO, msg=f"Location already exists - Not creating:{value}")
+        logger.log(logging.INFO, msg="Location already exists - Not creating: {}".format(location["name"]))
         return hash_id[0]
     else:
-        logger.log(logging.INFO, msg=f"Created location:{value}")
-        return add_to_db("INSERT INTO location (value) "
+        logger.log(logging.INFO, msg="Created Location: {}".format(location["slug"]))
+        return add_to_db("INSERT INTO location ("
+                         "name, "
+                         "slug, "
+                         "country, "
+                         "city, "
+                         "zip_code) "
+                         "VALUES (%s, %s, %s, %s, %s)",
+                         [location["name"],
+                          location["slug"],
+                          location["country"],
+                          location["city"],
+                          location["zip_code"]])
+
+
+def add_simple_location(name):
+    # If exists we return it, otherwise we create it
+    hash_id = query_db(f"SELECT location_id FROM location WHERE name = '{name}'")
+
+    if hash_id:
+        logger.log(logging.INFO, msg=f"Location already exists - Not creating: {name}")
+        return hash_id[0]
+    else:
+        logger.log(logging.INFO, msg=f"Created Location: {name}")
+        return add_to_db("INSERT INTO location (name) "
                          "VALUES (%s)",
-                         [value])
+                         [name])
 
 
 def add_post_location(post_id, location_id):

@@ -8,7 +8,7 @@ logger_fc = logging.getLogger('insta_logger.fc')
 
 def configure():
     logger.setLevel(logging.DEBUG)
-    file_handler = logging.FileHandler('insta_scraper.log')
+    file_handler = logging.FileHandler('insta_scraper.log', encoding="UTF-8")
     console_handler = logging.StreamHandler()
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
@@ -21,8 +21,10 @@ def configure():
     logger_fc.addHandler(file_handler)
     logger_fc.addHandler(console_handler)
 
+
 CONSOLE = 1
 FILE = 2
+
 
 def log(level, msg, destination=(CONSOLE | FILE)):
     current_logger = logger_fc
