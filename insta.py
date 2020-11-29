@@ -4,11 +4,8 @@ from scraper import scrape_data
 import db
 import logger
 import logging
-
-import requests
-from bs4 import BeautifulSoup
-import json
 import config
+
 
 def get_auth_by_file(filename):
     with open(filename, "r") as file:
@@ -62,7 +59,6 @@ def interactive_credentials():
 
         return username, password, keyword
 
-
     except KeyboardInterrupt:
         print("\nSee ya!")
         logger.log(logging.INFO, msg='User ended the program (KeyboardInterrupt exception)', destination=logger.FILE)
@@ -101,40 +97,14 @@ def main():
     else:
         username, password, keyword = interactive_credentials()
 
-
-    # We initialize the DB
-    db.initialize()
-
-    # If all good we go scraping
-    scrape_data(username=username, password=password, keyword=keyword, limit=args.limit)
-
-    # test("therock")
-
-
-def test(username):
-    response = requests.get("https://www.instagram.com/therock/?__a=1")
-    print(response.text)
-    # user_dict = json.loads(response.json())
-    # print(user_dict)
-
-    # if "ProfilePage" in data:
-    #     full_user = user_dict["entry_data"]["ProfilePage"][0]["graphql"]["user"]
-    #     user = {
-    #         "username": username,
-    #         "full_name": full_user["full_name"],
-    #         "followers": int(full_user["edge_followed_by"]["count"]),
-    #         "following": int(full_user["edge_follow"]["count"]),
-    #         "posts": full_user["edge_owner_to_timeline_media"]["count"],
-    #         "igtv_posts": full_user["edge_felix_video_timeline"]["count"],
-    #         "bio": full_user["biography"],
-    #         "external_url": full_user["external_url"],
-    #         "is_private": full_user["is_private"],
-    #         "is_verified": full_user["is_verified"],
-    #         "is_business_account": full_user["is_business_account"],
-    #         "business_category_name": full_user["business_category_name"]
-    #     }
-    #     print(user)
-    #     return db.add_user(user)
+    try:
+        # We initialize the DB
+        db.initialize()
+        # If all good we go scraping
+        scrape_data(username=username, password=password, keyword=keyword, limit=args.limit)
+    except FileNotFoundError:
+        print(f"You must have a file called {config.AUTH_DB_FILE} with your MySQL credentials: "
+              f"host, username and password each in a separate line.")
 
 
 if __name__ == "__main__":

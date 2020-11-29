@@ -161,7 +161,6 @@ def save_post(user_id, link, likes, location):
     try:
         response = requests.get(f"{link}{config.DATA_TO_JSON}")
         data = response.json()
-
         full_post = data["graphql"]["shortcode_media"]
         post = {
             "user_id": user_id,
@@ -177,13 +176,12 @@ def save_post(user_id, link, likes, location):
 
         full_location = full_post["location"]
         if full_location:
-            address = json.loads(full_location["address_json"])
+            address = json.loads(full_location["address_json"]) if full_location["address_json"] else None
             location = {
                 "name": full_location["name"],
                 "slug": full_location["slug"],
-                "country": address["country_code"],
-                "city": address["city_name"],
-                "zip_code": int(address["zip_code"]) if len(address["zip_code"]) > 0 in full_post else None
+                "country": address["country_code"] if address else None,
+                "city": address["city_name"] if address and len(address["city_name"]) > 0 else None
             }
             location_id = db.add_location(location)
             db.add_post_location(post_id, location_id)

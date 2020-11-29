@@ -60,8 +60,7 @@ def initialize():
                            name VARCHAR(255) NOT NULL,
                            slug VARCHAR(255) UNIQUE,
                            country VARCHAR(255),
-                           city VARCHAR(255),
-                           zip_code INTEGER);
+                           city VARCHAR(255));
                            ''')
             cur.execute('''CREATE TABLE IF NOT EXISTS post_location (
                            post_location_id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -209,14 +208,12 @@ def add_location(location):
                          "name, "
                          "slug, "
                          "country, "
-                         "city, "
-                         "zip_code) "
-                         "VALUES (%s, %s, %s, %s, %s)",
+                         "city) "
+                         "VALUES (%s, %s, %s, %s)",
                          [location["name"],
                           location["slug"],
                           location["country"],
-                          location["city"],
-                          location["zip_code"]])
+                          location["city"]])
 
 
 def add_simple_location(name):
@@ -227,7 +224,7 @@ def add_simple_location(name):
         logger.log(logging.INFO, msg=f"Location already exists - Not creating: {name}")
         return hash_id[0]
     else:
-        logger.log(logging.INFO, msg=f"Created Location: {name}")
+        logger.log(logging.INFO, msg=f"Created Simple Location: {name}")
         return add_to_db("INSERT INTO location (name) "
                          "VALUES (%s)",
                          [name])
