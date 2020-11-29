@@ -1,21 +1,54 @@
-# Insta Scraper
+# Welcome to Insta Scraper!
 
-Insta scraper is a command-line application written in Python that scrapes information about:
-  * Users
-  * Posts
+## About the project
+Insta scraper is a command-line application written in Python that scrapes public Instagram information about:
+  * Users (username, followers, following, etc)
+  * Posts (likes, views, etc)
   * Hashtags
   * Locations
   
-It is fully automated, it uses Requests, BeautifulSoup and Selenium modules (please see requirements.txt for further information) and stores all the data into a MySQL database.
+It is fully automated and stores all the information into a MySQL database.
 
-**IMPORTANT** : You need to have a file called db_auth.txt with your MySQL credentials (see Database section below)
+**IMPORTANT** : You need to have a file called db_auth.txt with your MySQL credentials (see instructions section below)
+
+### Built with:
+* Python 
+* MySQL
+
+## Getting Startted
+
+### Installation
+```
+pip install requests
+pip install beautifulsoup4
+pip install selenium
+pip install mysql-connector-python
+```
+### Pre-requisites
+You must create a file called db_auth.txt in which to add your MySQL credentials separated by line breaks.
+
+Example db_auth.txt:
+```
+localhost
+mysqluser
+mysqlpass
+```
+
+Additionally you can create a file called auth.txt with your Instagram credentials (optional)
+
+Example auth.txt:
+```
+myinstauser
+myinstapass
+```
+**Not to worry, your data is not stored anywhere**
+
+## Usage
 
 The program can be run in two ways from Terminal:
-  * Via the interactive menu. The authentication is part of the process. No arguments required.
-  * Via arguments. The authentication will be done either from `filename` provided as an argument or from default file named "./auth.txt".
-  > Note: Arguments mode is launched with `keyword` argument. Once provided the programm will run in this mode.
-
-**Not to worry, your data is not stored anywhere**
+  1. Via the interactive menu. The authentication is part of the process. No arguments required.
+  2. Via arguments. The authentication will be done either from `filename` provided as an argument or from default file named `auth.txt`.
+  > Note: Arguments mode is launched with `-k KEYWORD` argument. Once provided the programm will run in this mode.
 
 **NOTE**: To scrape a private user's media you must be an approved follower.
 
@@ -25,7 +58,7 @@ For help please type
 
 usage: insta.py [-h] [-k KEYWORD] [-f FILENAME] [-l LIMIT]
 
-scrape instagram by keyword (hashtag)
+scrape instagram by keyword (hashtag or username)
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -38,7 +71,7 @@ optional arguments:
    ```
 
 
-## Interactive mode example
+### 1. Interactive mode example
 Run through nice interactive UI
   
 ```sh
@@ -46,13 +79,26 @@ Run through nice interactive UI
 ```
 Then, follow the guidelines
 
-## Argument mode example
-```sh
-> python insta.py -k #cats -f credentials.txt -l 500 
+### 2. Argument mode example
+
+Searching via hashtag (with a #)
+```
+> python insta.py -k #cats 
 ```
 
-## Database support
+Searching via username (with a @)
+```
+> python insta.py -k @therock
+```
 
+Spcifying a different auth filename and a limit of posts to scrape 
+```
+> python insta.py -k #food -f credentials.txt -l 500 
+```
+
+## Database
+
+### Entity Relationship Diagram
 ![GitHub Logo](/erd.png)
 
 >NOTE: In order to store the information you scrape to the database you need to have a file named `db_auth.txt` in your project directory.
@@ -64,17 +110,16 @@ Then, follow the guidelines
 
 ## Logging
 
-Logging option is introduced to the functionality of the scraper. 
+Every Database insertion is logged into ```insta_scraper.log```
 
 
-**NOTE:** it is necessary to provide log level (for example INFO and the message that will be printed)
+**NOTE:** Each log comes with its log level (DEGUB, INFO, WARNING, etc)
 
-Default option is to print logs BOTH to console and the *.log file but this can be easily changed for each situation.
+By default logs will be printed BOTH to console and the log file *.log file but this can be easily changed for each situation.
 
-For example, to log Error output to the file the following command is needed:
-
+Log message example:
 ```
-logger.log(logging.ERROR, msg="File not found", destination=logger.FILE)
+2020-11-28 21:59:27,804 - INFO - Created Hashtag: chile
 ```  
 
 
