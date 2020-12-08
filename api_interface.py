@@ -4,7 +4,7 @@ import config
 import api_keys
 
 
-def google_geo_api(address, delay=3):
+def google_geo_api(address):
     base_url = config.GOOGLE_GEO_BASE
 
     params = {
@@ -19,13 +19,12 @@ def google_geo_api(address, delay=3):
         lon = geometry['location']['lng']
     else:
         return None, None
-    time.sleep(delay)
 
     return lat, lon
 
 
 def get_weather_api(address):
-    lat, lon = google_geo_api(address, delay=3)
+    lat, lon = google_geo_api(address)
     params = {'lat': lat,
               'lon': lon,
               'appid': api_keys.API_KEY_WEATHER,
