@@ -2,6 +2,7 @@
 env/
 auth.txt
 db_auth.txt
+api_keys.py
 *.log
 *.db
 __pycache__/

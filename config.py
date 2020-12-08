@@ -25,6 +25,12 @@ SUBMIT_SELECTOR = "button[type='submit']"
 NOT_NOW_XPATH = "//button[contains(text(), 'Not Now')]"
 SEARCH_XPATH = "//input[@placeholder='Search']"
 
+#API
+GOOGLE_GEO_BASE = 'https://maps.googleapis.com/maps/api/geocode/json?'
+WEATHER = 'http://api.openweathermap.org/data/2.5/weather?'
+
+
+
 
 def hash_xpath(keyword):
     """
