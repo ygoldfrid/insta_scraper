@@ -44,7 +44,6 @@ def interactive_credentials():
                     print(f"Not found file at path: {file_path}")
                     logger.log(logging.ERROR,
                                msg=f"Not found file at path: {file_path}", destination=logger.FILE)
-            pass
         else:  # console credentials
             username, password = get_auth_by_console()
 

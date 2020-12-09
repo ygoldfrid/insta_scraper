@@ -11,6 +11,7 @@ import config
 import db
 import logging
 import logger
+import weather_api
 
 
 def scrape_data(username, password, keyword, limit=50):
@@ -170,11 +171,14 @@ def save_post(user_id, link, likes, location):
             "comments": full_post["edge_media_to_parent_comment"]["count"],
             "is_video": full_post["is_video"],
             "views": full_post["video_view_count"] if "video_view_count" in full_post else None,
+            "temperature": None,
+            "weather": None,
             "timestamp": full_post["taken_at_timestamp"]
         }
-        post_id = db.add_post(user_id, post)
 
+        # if there is a location let's add it
         full_location = full_post["location"]
+        location_id = None
         if full_location:
             address = json.loads(full_location["address_json"]) if full_location["address_json"] else None
             location = {
@@ -183,7 +187,23 @@ def save_post(user_id, link, likes, location):
                 "country": address["country_code"] if address else None,
                 "city": address["city_name"] if address and len(address["city_name"]) > 0 else None
             }
+            # Getting Geo location from google API
+            geo_address = f"{location['city']}, {location['country']}"
+            lat, lon = weather_api.google_geo(geo_address)
+            location["latitude"] = lat
+            location["longitude"] = lon
+            # Getting weather from open weather API
+            temperature, weather = weather_api.get_weather(lat, lon, post["timestamp"])
+            post["temperature"] = temperature
+            post["weather"] = weather
+
             location_id = db.add_location(location)
+
+        # We save the post
+        post_id = db.add_post(user_id, post)
+
+        # If there is a location we save the aux table entry
+        if location_id:
             db.add_post_location(post_id, location_id)
 
         return post_id

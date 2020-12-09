@@ -28,7 +28,7 @@ SEARCH_XPATH = "//input[@placeholder='Search']"
 #API
 GOOGLE_GEO_BASE = 'https://maps.googleapis.com/maps/api/geocode/json?'
 WEATHER = 'http://api.openweathermap.org/data/2.5/weather?'
-
+WEATHER2 = "http://api.weatherapi.com/v1/history.json"
 
 
 

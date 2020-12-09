@@ -40,6 +40,8 @@ def initialize():
                            comments INTEGER,
                            is_video BOOLEAN,
                            views INTEGER,
+                           temperature INTEGER,
+                           weather VARCHAR(255),
                            timestamp INTEGER,
                            FOREIGN KEY (user_id) REFERENCES user (user_id));
                            ''')
@@ -60,7 +62,9 @@ def initialize():
                            name VARCHAR(255) NOT NULL,
                            slug VARCHAR(255) UNIQUE,
                            country VARCHAR(255),
-                           city VARCHAR(255));
+                           city VARCHAR(255),
+                           latitude INT,
+                           longitude INT);
                            ''')
             cur.execute('''CREATE TABLE IF NOT EXISTS post_location (
                            post_location_id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -142,8 +146,10 @@ def add_post(user_id, post):
                          "comments, "
                          "is_video, "
                          "views, "
+                         "temperature, "
+                         "weather, "
                          "timestamp) "
-                         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                          [user_id,
                           post["link"],
                           post["caption"],
@@ -151,6 +157,8 @@ def add_post(user_id, post):
                           post["comments"],
                           post["is_video"],
                           post["views"],
+                          post["temperature"],
+                          post["weather"],
                           post["timestamp"]])
 
 
@@ -208,12 +216,16 @@ def add_location(location):
                          "name, "
                          "slug, "
                          "country, "
-                         "city) "
-                         "VALUES (%s, %s, %s, %s)",
+                         "city, "
+                         "latitude, "
+                         "longitude) "
+                         "VALUES (%s, %s, %s, %s, %s, %s)",
                          [location["name"],
                           location["slug"],
                           location["country"],
-                          location["city"]])
+                          location["city"],
+                          location["latitude"],
+                          location["longitude"]])
 
 
 def add_simple_location(name):
