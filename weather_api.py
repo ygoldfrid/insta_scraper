@@ -22,9 +22,9 @@ def google_geo_api(address):
     return lat, lon
 
 
-def get_weather_api(lat, lon, address):
-    params = {'lat': lat,
-              'lon': lon,
+def get_weather_api(latitude, lontitude, address):
+    params = {'lat': latitude,
+              'lon': lontitude,
               'appid': api_keys.API_KEY_WEATHER,
               'units': 'metric'
               }
@@ -43,5 +43,5 @@ def get_weather_api(lat, lon, address):
 
 test = r"Jerusalem, Israel"
 lat, lon = google_geo_api(address=test)
-data = get_weather_api(lat=lat, lon=lon, address=test)
+data = get_weather_api(latitude=lat, lontitude=lon, address=test)
 print(data)
