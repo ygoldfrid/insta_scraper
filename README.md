@@ -1,6 +1,6 @@
 # Welcome to Insta Scraper!
 
-## About the project
+## 1. About the project
 Insta scraper is a command-line application written in Python that scrapes public Instagram information about:
   * Users (username, followers, following, etc)
   * Posts (likes, views, etc)
@@ -15,7 +15,7 @@ It is fully automated and stores all the information into a MySQL database.
 * Python 
 * MySQL
 
-## Getting Startted
+## 2. Getting Startted
 
 ### Installation
 ```
@@ -43,12 +43,13 @@ myinstapass
 ```
 **Not to worry, your data is not stored anywhere**
 
-## Usage
+## 3. Usage
 
 The program can be run in two ways from Terminal:
-  1. Via the interactive menu. The authentication is part of the process. No arguments required.
-  2. Via arguments. The authentication will be done either from `filename` provided as an argument or from default file named `auth.txt`.
-  > Note: Arguments mode is launched with `-k KEYWORD` argument. Once provided the programm will run in this mode.
+ * a. Via the interactive menu. The authentication is part of the process. No arguments required.
+ * b. Via arguments. The authentication will be done either from `filename` provided as an argument or from default file named `auth.txt`.
+  
+ > Note: Arguments mode is launched with `-k KEYWORD` argument. Once provided the programm will run in this mode.
 
 **NOTE**: To scrape a private user's media you must be an approved follower.
 
@@ -71,7 +72,7 @@ optional arguments:
    ```
 
 
-### 1. Interactive mode example
+### a. Interactive mode example
 Run through nice interactive UI
   
 ```sh
@@ -79,7 +80,7 @@ Run through nice interactive UI
 ```
 Then, follow the guidelines
 
-### 2. Argument mode example
+### b. Argument mode example
 
 Searching via hashtag (with a #)
 ```
@@ -96,7 +97,7 @@ Spcifying a different auth filename and a limit of posts to scrape
 > python insta.py -k #food -f credentials.txt -l 500 
 ```
 
-## Database
+## 4. Database
 
 ### Entity Relationship Diagram
 ![GitHub Logo](/erd.png)
@@ -108,7 +109,7 @@ Spcifying a different auth filename and a limit of posts to scrape
 * root
 * personal password to your MySQL
 
-## Logging
+## 5. Logging
 
 Every Database insertion is logged into ```insta_scraper.log```
 
@@ -121,7 +122,21 @@ Log message example:
 ```
 2020-11-28 21:59:27,804 - INFO - Created Hashtag: chile
 ```  
+## 6. API usage
 
+When users upload posts they usually add a Location attribute. With this we do 2 things:
+ * We get the Geo Coordinates of the Location using [Google Geo Location API](https://developers.google.com/maps/documentation/geolocation/overview)
+ * We get the weather Forecast and avergae Temperature on the day of the post using [Weather API] (https://www.weatherapi.com/)
+We added these columns to the respective tables.
+
+You need to have a file called ```api_keys.py``` with this format:
+```
+API_KEY_GEO = "<your_google_api_key>"
+API_KEY_WEATHER = "<your_weather_api_key>"
+```
+ 
+ 
+ 
 
 
 
