@@ -126,7 +126,8 @@ Log message example:
 
 When users upload posts they usually add a Location attribute. With this we do 2 things:
  * We get the Geo Coordinates of the Location using [Google Geo Location API](https://developers.google.com/maps/documentation/geolocation/overview)
- * We get the weather Forecast and avergae Temperature on the day of the post using [Weather API] (https://www.weatherapi.com/)
+ * We get the weather Forecast and avergae Temperature on the day of the post using [Weather API](https://www.weatherapi.com/)
+ 
 We added these columns to the respective tables.
 
 You need to have a file called ```api_keys.py``` with this format:
