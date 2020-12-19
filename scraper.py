@@ -3,7 +3,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import selenium.common.exceptions
-import requests
 from bs4 import BeautifulSoup
 import warnings
 import json
@@ -14,19 +13,24 @@ import logger
 import weather_api
 
 
-def scrape_data(username, password, keyword, limit=50):
+def scrape_data(username, password, keyword, limit=1000):
     # Setting the driver and opening Instagram
     driver = webdriver.Chrome()
     driver.get(config.BASE_URL)
-
     # Login in, filling search boxes, etc
-    fill_info(driver, username, password, keyword)
+    fill_login(driver, username, password)
+    fill_keyword(driver, keyword)
+
+    driver_json = webdriver.Chrome()
+    driver_json.get(config.BASE_URL)
+    # Login in, filling search boxes, etc
+    fill_login(driver_json, username, password)
 
     # Do the real scraping
-    save_content(driver, limit, keyword)
+    save_content(driver, driver_json, limit, keyword)
 
 
-def fill_info(driver, username, password, keyword):
+def fill_login(driver, username, password):
     # Finding the auth boxes by CSS Selectors
     username_box = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, config.AUTH_USER_SEL)))
     password_box = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, config.AUTH_PASS_SEL)))
@@ -47,6 +51,8 @@ def fill_info(driver, username, password, keyword):
     not_now_btn2 = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, config.NOT_NOW_XPATH)))
     not_now_btn2.click()
 
+
+def fill_keyword(driver, keyword):
     # If no user searched without # or @, we add a #
     keyword = "#" + keyword if keyword[0] not in ["@", "#"] else keyword
 
@@ -63,7 +69,7 @@ def fill_info(driver, username, password, keyword):
     hashtag_btn.click()
 
 
-def save_content(driver, limit, keyword):
+def save_content(driver, driver_json, limit, keyword):
     # Ignoring warnings from Beautiful Soup (not relevant for this project)
     warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
 
@@ -119,9 +125,9 @@ def save_content(driver, limit, keyword):
             logger.log(logging.INFO, msg="Post took too long - SKIPPING")
         else:
             # We go save the user info (followers, following, etc)
-            user_id = save_user(username)
+            user_id = save_user(driver_json, username)
             # We go save the post info (likes, views, timestamp, etc)
-            post_id = save_post(user_id, link, likes, location)
+            post_id = save_post(driver_json, user_id, link, likes, location)
             # We save the hashtags
             for hashtag in hashtags:
                 hashtag_id = db.add_hashtag(hashtag)
@@ -133,10 +139,10 @@ def save_content(driver, limit, keyword):
             next_post.click()
 
 
-def save_user(username):
+def save_user(driver_json, username):
     try:
-        response = requests.get(f"{config.BASE_URL}{username}/{config.DATA_TO_JSON}")
-        data = response.json()
+        driver_json.get(f"{config.BASE_URL}{username}/{config.DATA_TO_JSON}")
+        data = json.loads(BeautifulSoup(driver_json.page_source, 'html.parser').find('body').get_text())
         full_user = data["graphql"]["user"]
         user = {
             "username": username,
@@ -154,14 +160,15 @@ def save_user(username):
             "is_joined_recently": full_user["is_joined_recently"]
         }
         return db.add_user(user)
-    except json.decoder.JSONDecodeError:
+    except json.decoder.JSONDecodeError as ex:
+        print(ex)
         return db.add_simple_user(username)
 
 
-def save_post(user_id, link, likes, location):
+def save_post(driver_json, user_id, link, likes, location):
     try:
-        response = requests.get(f"{link}{config.DATA_TO_JSON}")
-        data = response.json()
+        driver_json.get(f"{link}{config.DATA_TO_JSON}")
+        data = json.loads(BeautifulSoup(driver_json.page_source, 'html.parser').find('body').get_text())
         full_post = data["graphql"]["shortcode_media"]
         post = {
             "user_id": user_id,
@@ -207,7 +214,8 @@ def save_post(user_id, link, likes, location):
             db.add_post_location(post_id, location_id)
 
         return post_id
-    except json.decoder.JSONDecodeError:
+    except json.decoder.JSONDecodeError as ex:
+        print(ex)
         post_id = db.add_simple_post(user_id, link, likes)
         if location:
             location_id = db.add_simple_location(location)

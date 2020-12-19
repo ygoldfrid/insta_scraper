@@ -13,8 +13,8 @@ def initialize():
     with mysql.connector.connect(host=host, user=user, password=password) as conn:
         with conn:
             cur = conn.cursor()
-            cur.execute("CREATE DATABASE IF NOT EXISTS insta")
-            cur.execute("USE insta")
+            cur.execute(f"CREATE DATABASE IF NOT EXISTS {config.DB_NAME}")
+            cur.execute(f"USE {config.DB_NAME}")
             cur.execute('''CREATE TABLE IF NOT EXISTS user (
                            user_id INTEGER PRIMARY KEY AUTO_INCREMENT,
                            username VARCHAR(255) UNIQUE,
@@ -261,7 +261,7 @@ def query_db(command):
         user = file.readline().strip()
         password = file.readline().strip()
 
-    conn = mysql.connector.connect(host=host, user=user, password=password, database="insta")
+    conn = mysql.connector.connect(host=host, user=user, password=password, database=f"{config.DB_NAME}")
     cur = conn.cursor(buffered=True)
     try:
         cur.execute(command)
@@ -277,7 +277,7 @@ def add_to_db(command, values):
         user = file.readline().strip()
         password = file.readline().strip()
 
-    conn = mysql.connector.connect(host=host, user=user, password=password, database="insta")
+    conn = mysql.connector.connect(host=host, user=user, password=password, database=f"{config.DB_NAME}")
     cur = conn.cursor(buffered=True)
     try:
         cur.execute(command, values)

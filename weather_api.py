@@ -14,7 +14,8 @@ def google_geo(address):
     response = requests.get(config.GOOGLE_GEO_BASE, params=params).json()
 
     if response['status'] != 'OK':
-        raise Exception("Unable to get location")
+        logger.log(logging.WARNING, msg="Unable to get location")
+        return None, None
 
     geometry = response['results'][0]['geometry']
     lat = geometry['location']['lat']
